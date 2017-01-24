@@ -1,0 +1,7 @@
+include_directories(include)
+
+file(GLOB SOURCES "src/*.cpp" "src/la/*.cpp")
+# aux_source_directory("src" SOURCE)
+
+add_library(libololearning SHARED STATIC ${SOURCES})
+target_include_directories(libololearning PUBLIC include)
