@@ -8,6 +8,116 @@
 
 using namespace std;
 
+double* zeroVector(size_t size) {
+    double* data = new double[size];
+    memset(data, 0, size * sizeof(data));
+    return data;
+}
+
+double* zeroMatrix(size_t nrow, size_t ncol) {
+    return zeroVector(nrow * ncol);
+}
+
+DenseVector::DenseVector(size_t size) {
+    this->data = zeroVector(size);
+    this->size = size;
+}
+
+DenseVector::DenseVector(double* data, size_t size) {
+    this->data = data;
+    this->size = size;
+}
+
+double DenseVector::get(size_t i) {
+    size_t size = this->size;
+    assert(i < size);
+    double* data = this->data;
+    return data[i];
+}
+
+void DenseVector::set(size_t i, double val) {
+    size_t size = this->size;
+    assert(i < size);
+    double* data = this->data;
+    data[i] = val;
+}
+
+double DenseVector::norm2() {
+    size_t size = this->size;
+
+    double* data = this->data;
+    double norm2 = 0.0;
+    for (size_t i = 0; i < size; i++) {
+        double el = data[i];
+        norm2 = norm2 + el * el;
+    }
+
+    return norm2;
+}
+
+
+double DenseVector::distance2(DenseVector other) {
+    size_t size = this->size;
+    assert(size == other.size);
+
+    double* data = this->data;
+    double* oData = other.data;
+
+    double total = 0.0;
+    for (size_t i = 0; i < size; i++) {
+        double d = data[i] - oData[i];
+        total = total + d * d;
+    }
+
+    return total;
+}
+
+
+double DenseVector::dot(DenseVector other) {
+    size_t size = this->size;
+    assert(size == other.size);
+
+    double* data = this->data;
+    double* oData = other.data;
+
+    double total = 0.0;
+    for (size_t i = 0; i < size; i++) {
+        total = total + data[i] * oData[i];
+    }
+
+    return total;
+}
+
+
+double* copyOrSame(double* array, size_t size, bool inplace) {
+    if (inplace == true) {
+        return array;
+    }
+
+    double* newData = new double[size];
+    memcpy(newData, array, size * sizeof(double*));
+    return newData;
+}
+
+DenseVector DenseVector::subtract(DenseVector other, bool inplace) {
+    size_t size = this->size;
+    assert(size == other.size);
+
+    double* newData = copyOrSame(this->data, size, inplace);
+    double* oData = other.data;
+
+    for (size_t i = 0; i < size; i++) {
+        newData[i] = data[i] - oData[i];
+    }
+
+    if (inplace == true) {
+        return *this;
+    } else {
+        DenseVector result(newData, size);
+        return result;
+    }
+}
+
 
 void DenseMatrix::init(double* data, size_t nrow, size_t ncol) {
     this->nrow = nrow;
@@ -19,28 +129,9 @@ DenseMatrix::DenseMatrix(double* data, size_t nrow, size_t ncol) {
     this->init(data, nrow, ncol);
 }
 
-double* zeros(size_t nrow, size_t ncol) {
-    double* data = new double[nrow * ncol];
-    memset(data, 0, sizeof(data));
-    return data;
-}
-
 DenseMatrix::DenseMatrix(size_t nrow, size_t ncol) {
-    double* data = zeros(nrow, ncol);
+    double* data = zeroMatrix(nrow, ncol);
     this->init(data, nrow, ncol);
-}
-
-DenseMatrix DenseMatrix::fromRowArray(double* data, size_t nrow, size_t ncol) {
-    double* result = new double[nrow * ncol];
-
-    for (size_t i = 0; i < nrow; i++) {
-        for (size_t j = 0; j < ncol; j++) {
-            result[i + nrow * j] = data[i * ncol + j];
-        }
-    }
-
-    DenseMatrix m(result, nrow, ncol);
-    return m;
 }
 
 DenseMatrix DenseMatrix::eye(size_t n) {
@@ -56,31 +147,32 @@ DenseMatrix DenseMatrix::eye(size_t n) {
 
 double DenseMatrix::get(size_t row, size_t col) {
     size_t ncol = this->ncol;
-    return this->data[row + col * nrow];
+    return this->data[row * ncol + col];
 }
 
 void DenseMatrix::set(size_t row, size_t col, double val) {
     size_t ncol = this->ncol;
     double* data = this->data;
-    data[row + col * nrow] = val;
+    data[row * ncol + col] = val;
 }
 
-double* DenseMatrix::getColumn(size_t col) {
-    double* data = this->data;
+DenseVector DenseMatrix::getColumn(size_t col) {
     size_t nrow = this->nrow;
-    return &data[col * nrow];
-}
 
-double* DenseMatrix::getRow(size_t row) {
-    size_t ncol = this->ncol;
+    double* colData = new double[nrow];
 
-    double* rowData = new double[ncol];
-
-    for (size_t c = 0; c < ncol; c++) {
-        rowData[c] = this->get(row, c);
+    for (size_t r = 0; r < nrow; r++) {
+        colData[r] = this->get(r, col);
     }
 
-    return rowData;
+    return DenseVector(colData, nrow);
+}
+
+DenseVector DenseMatrix::getRow(size_t row) {
+    double* data = this->data;
+    size_t ncol = this->ncol;
+    double* rowData = &data[row * ncol];
+    return DenseVector(rowData, ncol);
 }
 
 
@@ -91,16 +183,8 @@ DenseMatrix DenseMatrix::subtract(DenseMatrix other, bool inplace) {
     assert(nrow == other.nrow);
 
     size_t size = ncol * nrow;
-    double* data = this->data;
+    double* newData = copyOrSame(this->data, size, inplace);
     double* oData = other.data;
-
-    double* newData;
-    if (inplace == true) {
-        newData = data;
-    } else {
-        newData = new double[size];
-        memcpy(newData, data, size * sizeof(double));
-    }
 
     for (size_t i = 0; i < size; i++) {
         newData[i] = data[i] - oData[i];
@@ -110,7 +194,7 @@ DenseMatrix DenseMatrix::subtract(DenseMatrix other, bool inplace) {
         return *this;
     } else {
         DenseMatrix result(newData, nrow, ncol);
-        return result;    
+        return result;
     }
 }
 
@@ -127,6 +211,26 @@ double DenseMatrix::norm2() {
     }
 
     return norm2;
+}
+
+double DenseMatrix::distance2(DenseMatrix other) {
+    size_t ncol = this->ncol;
+    size_t nrow = this->nrow;
+    assert(ncol == other.ncol);
+    assert(nrow == other.nrow);
+
+    size_t size = ncol * nrow;
+
+    double* data = this->data;
+    double* oData = other.data;
+
+    double total = 0.0;
+    for (size_t i = 0; i < size; i++) {
+        double d = data[i] - oData[i];
+        total = total + d * d;
+    }
+
+    return total;
 }
 
 DenseMatrix DenseMatrix::transpose() {
@@ -146,6 +250,27 @@ DenseMatrix DenseMatrix::transpose() {
 }
 
 
+DenseVector vmult(DenseVector other) {
+    return other;
+}
+
+DenseMatrix DenseMatrix::mmult(DenseMatrix other) {
+    return *this;
+}
+
+void DenseVector::printVector() {    
+    size_t size = this->size;
+    double* data = this->data;
+
+    cout << "size: " << size << endl;
+    for (size_t i = 0; i < size; i++) {
+        cout << data[i] << " ";
+    }
+
+    cout << endl;
+}
+
+
 void DenseMatrix::printMatrix() {    
     size_t nrow = this->nrow;
     size_t ncol = this->ncol;
@@ -158,4 +283,3 @@ void DenseMatrix::printMatrix() {
         cout << endl;
     }
 }
-
