@@ -23,9 +23,9 @@ TEST_F(TestSuite, VectorSetAndGet) {
 
 TEST_F(TestSuite, VectorInitializedWithArray) {
     const size_t size = 4;
-    double data[size] = { 0.0, 1.0, 2.0, 3.0 };
+    double* data = new double[size] { 0.0, 1.0, 2.0, 3.0 };
 
-    DenseVector v(&data[0], size);
+    DenseVector v(data, size);
 
     EXPECT_EQ(v.get(0), 0.0);
     EXPECT_EQ(v.get(1), 1.0);
@@ -35,9 +35,9 @@ TEST_F(TestSuite, VectorInitializedWithArray) {
 
 TEST_F(TestSuite, VectorNorm2) {
     const size_t size = 4;
-    double data[size] = { 0.0, 1.0, 2.0, 3.0 };
+    double* data = new double[size] { 0.0, 1.0, 2.0, 3.0 };
 
-    DenseVector v(&data[0], size);
+    DenseVector v(data, size);
     double norm2 = v.norm2();
     double expected = 1 + 4 + 9;
 
@@ -46,12 +46,12 @@ TEST_F(TestSuite, VectorNorm2) {
 
 TEST_F(TestSuite, VectorDistance2) {
     const size_t size = 4;
-    double data1[size] = { 0.0, 1.0, 2.0, 3.0 };
-    double data2[size] = { 3.0, 3.0, 3.0, 3.0 };
+    double* data1 = new double[size] { 0.0, 1.0, 2.0, 3.0 };
+    double* data2 = new double[size] { 3.0, 3.0, 3.0, 3.0 };
 
-    DenseVector v1(&data1[0], size), v2(&data2[0], size);
+    DenseVector v1(data1, size), v2(data2, size);
     double dist2 = v1.distance2(v2);
-    double expected = 9 + 4 + 1;
+    double expected = 9 + 4 + 1 + 0;
 
     EXPECT_EQ(dist2, expected);
 }
@@ -59,10 +59,10 @@ TEST_F(TestSuite, VectorDistance2) {
 
 TEST_F(TestSuite, VectorDot) {
     const size_t size = 4;
-    double data1[size] = { 0.0, 1.0, 2.0, 3.0 };
-    double data2[size] = { 3.0, 3.0, 3.0, 3.0 };
+    double* data1 = new double[size] { 0.0, 1.0, 2.0, 3.0 };
+    double* data2 = new double[size] { 3.0, 3.0, 3.0, 3.0 };
 
-    DenseVector v1(&data1[0], size), v2(&data2[0], size);
+    DenseVector v1(data1, size), v2(data2, size);
     double dot = v1.dot(v2);
     double expected = 3 + 6 + 9;
 
@@ -72,10 +72,10 @@ TEST_F(TestSuite, VectorDot) {
 
 TEST_F(TestSuite, VectorSubtract) {
     const size_t size = 4;
-    double data1[size] = { 0.0, 1.0, 2.0, 3.0 };
-    double data2[size] = { 3.0, 3.0, 3.0, 3.0 };
+    double* data1 = new double[size] { 0.0, 1.0, 2.0, 3.0 };
+    double* data2 = new double[size] { 3.0, 3.0, 3.0, 3.0 };
 
-    DenseVector v1(&data1[0], size), v2(&data2[0], size);
+    DenseVector v1(data1, size), v2(data2, size);
     DenseVector s = v1.subtract(v2, false);
 
     EXPECT_EQ(s.get(0), -3);
@@ -83,7 +83,6 @@ TEST_F(TestSuite, VectorSubtract) {
     EXPECT_EQ(s.get(2), -1);
     EXPECT_EQ(s.get(3), 0);
 }
-
 
 
 TEST_F(TestSuite, MatrixInitializedWithZeros) {
@@ -233,5 +232,53 @@ TEST_F(TestSuite, MatrixTranspose) {
     DenseMatrix expT(&expectedData[0][0], ncol, nrow);
 
     double dist = t.distance2(expT);
+    EXPECT_EQ(dist, 0);
+}
+
+TEST_F(TestSuite, MatrixVectorMult) {
+    const int nrow = 4, ncol = 3;
+    double data[nrow][ncol] = {
+        {0.0, 1.0, 2.0},
+        {3.0, 4.0, 5.0},
+        {6.0, 7.0, 8.0},
+        {9.0, 0.0, 1.0},
+    };
+    double vdata[ncol] = { 1.0, 2.0, 3.0 };
+    double edata[nrow] = { 8., 26., 44., 12. };
+
+    DenseMatrix m(&data[0][0], nrow, ncol);
+    DenseVector v(&vdata[0], ncol);
+
+    DenseVector res = m.vmult(v);
+    DenseVector expected(&edata[0], nrow);
+
+    double dist = res.distance2(expected);
+    EXPECT_EQ(dist, 0);
+}
+
+
+TEST_F(TestSuite, MatrixMatrixMult) {
+    double dataA[3][2] = {
+        {0.0, 1.0},
+        {3.0, 4.0},
+        {6.0, 7.0},
+    };
+    double dataB[2][4] = {
+        {0.0, 1.0, 2.0, 3.0},
+        {3.0, 4.0, 1.0, 2.0},
+    };
+    double dataC[3][4] = { 
+        {  3.,   4.,   1.,   2.},
+        { 12.,  19.,  10.,  17.},
+        { 21.,  34.,  19.,  32.}
+    };
+
+    DenseMatrix A(&dataA[0][0], 3, 2);
+    DenseMatrix B(&dataB[0][0], 2, 4);
+    DenseMatrix expC(&dataC[0][0], 3, 4);
+
+    DenseMatrix C = A.mmult(B);
+
+    double dist = C.distance2(expC);
     EXPECT_EQ(dist, 0);
 }

@@ -5,6 +5,8 @@ class DenseVector {
 public:
     DenseVector(size_t size);
     DenseVector(double* data, size_t size);
+    ~DenseVector();
+
     double get(size_t i);
     void set(size_t i, double val);
     double norm2();
@@ -15,19 +17,24 @@ public:
     DenseVector subtract(DenseVector other, bool inplace);
 
     void printVector();
+
+    size_t size();
+    double* getData();
 private:
-    size_t size;
-    double* data;
+    size_t _size;
+    double* _data;
 };
 
 
 class DenseMatrix {
 public: 
     DenseMatrix(size_t nrow, size_t ncol);
+    DenseMatrix(double* data, size_t nrow, size_t ncol);
+    ~DenseMatrix();
+
     static DenseMatrix eye(size_t n);
     static DenseMatrix ones(size_t nrow, size_t ncol);
-
-    DenseMatrix(double* data, size_t nrow, size_t ncol);
+    
     double get(size_t row, size_t col);
     void set(size_t row, size_t col, double val);
 
@@ -48,7 +55,7 @@ public:
 
 private:
     void init(double* data, size_t nrow, size_t ncol);
-    size_t nrow;
-    size_t ncol;
-    double* data;
+    size_t _nrow;
+    size_t _ncol;
+    double* _data;
 };
