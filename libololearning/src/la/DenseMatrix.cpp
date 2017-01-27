@@ -302,8 +302,36 @@ DenseMatrix DenseMatrix::mmult(DenseMatrix other) {
 
     DenseMatrix resT(resultData, ncolRes, nrowRes);
     DenseMatrix result = resT.transpose();
-    // delete resT, o;
     return result;
+}
+
+DenseVector DenseMatrix::solve(DenseVector b) {
+    // Gaussian elimination
+    return b;
+}
+
+DenseMatrix::LUDecomposition DenseMatrix::lu() {
+    DenseMatrix::LUDecomposition result;
+    result.L = this;
+    result.U = this;
+    return result;
+}
+
+DenseMatrix DenseMatrix::inverse() {
+    return *this;
+}
+
+DenseMatrix DenseMatrix::clone() {
+    double* data = this->_data;
+    size_t ncol = this->_ncol;
+    size_t nrow = this->_nrow;
+
+    size_t size = ncol * nrow;
+
+    double* newData = new double[size];
+    memcpy(newData, data, size * sizeof(double));
+
+    return DenseMatrix(newData, nrow, ncol);
 }
 
 void DenseVector::printVector() {    

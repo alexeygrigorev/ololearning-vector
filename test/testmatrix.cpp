@@ -282,3 +282,56 @@ TEST_F(TestSuite, MatrixMatrixMult) {
     double dist = C.distance2(expC);
     EXPECT_EQ(dist, 0);
 }
+
+TEST_F(TestSuite, MatrixSolve3x3) {
+    double dataA[3][3] = {
+        { 1, 2, 1 },
+        { 3, 8, 1 },
+        { 9, 4, 1 }
+    };
+    double dataB[3] = { 2, 12, 2 };
+    double dataXExp[3] = { -0.454,  1.818, -1.181 };
+
+    DenseMatrix A(&dataA[0][0], 3, 3);
+    DenseVector b(&dataB[0], 3);
+    DenseVector x = A.solve(b);
+
+    DenseVector expX(&dataXExp[0], 3);
+
+    double dist = x.distance2(expX);
+    ASSERT_TRUE(dist <= 0.005);
+}
+
+
+
+TEST_F(TestSuite, MatrixInverse2x2) {
+    double dataA[2][2] = {
+        { 1, 2 },
+        { 2, 2 },
+    };
+    double dataAInv[2][2] = {
+        { -1.0,  1.0 },
+        {  1.0, -0.5 },
+    };
+
+    DenseMatrix A(&dataA[0][0], 2, 2);
+    DenseMatrix AInv = A.inverse();
+    DenseMatrix expAInv(&dataAInv[0][0], 2, 2);
+
+    double dist = AInv.distance2(expAInv);
+    ASSERT_TRUE(dist <= 0.000001);
+}
+
+TEST_F(TestSuite, MatrixClone) {
+    double dataA[2][2] = {
+        { 1, 2 },
+        { 2, 2 },
+    };
+    DenseMatrix A(&dataA[0][0], 2, 2);
+    DenseMatrix copy = A.clone();
+    copy.set(0, 0, 2);
+
+    EXPECT_EQ(copy.get(0, 0), 2);
+    EXPECT_EQ(A.get(0, 0), 1);
+}
+

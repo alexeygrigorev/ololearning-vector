@@ -27,7 +27,13 @@ private:
 
 
 class DenseMatrix {
-public: 
+public:
+    struct LUDecomposition {
+        DenseMatrix *L;
+        DenseMatrix *U;
+    };
+
+
     DenseMatrix(size_t nrow, size_t ncol);
     DenseMatrix(double* data, size_t nrow, size_t ncol);
     ~DenseMatrix();
@@ -50,6 +56,12 @@ public:
 
     DenseVector vmult(DenseVector other);
     DenseMatrix mmult(DenseMatrix other);
+
+    LUDecomposition lu();
+    DenseVector solve(DenseVector b);
+    DenseMatrix inverse();
+
+    DenseMatrix clone();
 
     void printMatrix();
 
