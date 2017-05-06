@@ -33,6 +33,19 @@ TEST_F(TestSuite, VectorInitializedWithArray) {
     EXPECT_EQ(v.get(3), 3.0);
 }
 
+TEST_F(TestSuite, VectorSwap) {
+    const size_t size = 4;
+    double* data = new double[size] { 0.0, 1.0, 2.0, 3.0 };
+
+    DenseVector v(data, size);
+    v.swap(1, 2);
+
+    EXPECT_EQ(v.get(0), 0.0);
+    EXPECT_EQ(v.get(1), 2.0);
+    EXPECT_EQ(v.get(2), 1.0);
+    EXPECT_EQ(v.get(3), 3.0);
+}
+
 TEST_F(TestSuite, VectorNorm2) {
     const size_t size = 4;
     double* data = new double[size] { 0.0, 1.0, 2.0, 3.0 };
@@ -151,6 +164,29 @@ TEST_F(TestSuite, MatrixGetRow) {
 
     double diff = row.distance2(expected);
     EXPECT_EQ(0, diff);
+}
+
+TEST_F(TestSuite, MatrixSwapRow) {
+    const int nrow = 4, ncol = 3;
+    double data[nrow][ncol] = {
+        {0.0, 1.0, 2.0},
+        {3.0, 4.0, 5.0},
+        {6.0, 7.0, 8.0},
+        {9.0, 0.0, 1.0},
+    };
+
+    DenseMatrix m(&data[0][0], nrow, ncol);
+    m.swapRows(1, 2);
+
+    DenseVector row1 = m.getRow(1);
+    double rowData1[ncol] = { 6.0, 7.0, 8.0 };
+    DenseVector expected1(&rowData1[0], ncol);
+    EXPECT_EQ(0, row1.distance2(expected1));
+
+    DenseVector row2 = m.getRow(2);
+    double rowData2[ncol] = { 3.0, 4.0, 5.0 };
+    DenseVector expected2(&rowData2[0], ncol);
+    EXPECT_EQ(0, row2.distance2(expected2));
 }
 
 TEST_F(TestSuite, MatrixSubtract) {
@@ -328,7 +364,7 @@ TEST_F(TestSuite, MatrixClone) {
         { 2, 2 },
     };
     DenseMatrix A(&dataA[0][0], 2, 2);
-    DenseMatrix copy = A.clone();
+    DenseMatrix copy = A.copy();
     copy.set(0, 0, 2);
 
     EXPECT_EQ(copy.get(0, 0), 2);

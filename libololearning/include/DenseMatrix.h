@@ -9,6 +9,8 @@ public:
 
     double get(size_t i);
     void set(size_t i, double val);
+    void swap(size_t i, size_t j);
+
     double norm2();
 
     double distance2(DenseVector other);
@@ -20,6 +22,8 @@ public:
 
     size_t size();
     double* getData();
+
+    DenseVector copy();
 private:
     size_t _size;
     double* _data;
@@ -48,6 +52,7 @@ public:
 
     DenseVector getColumn(size_t col);
     DenseVector getRow(size_t row);
+    void swapRows(size_t i, size_t j);
 
     double distance2(DenseMatrix other);
     DenseMatrix subtract(DenseMatrix other, bool inplace);
@@ -61,7 +66,7 @@ public:
     DenseVector solve(DenseVector b);
     DenseMatrix inverse();
 
-    DenseMatrix clone();
+    DenseMatrix copy();
 
     void printMatrix();
 

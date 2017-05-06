@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstring>
 #include <iostream>
+#include <cmath>
 
 #include <cassert>
 
@@ -44,6 +45,17 @@ void DenseVector::set(size_t i, double val) {
     assert(i < size);
     double* data = this->_data;
     data[i] = val;
+}
+
+void DenseVector::swap(size_t i, size_t j) {
+    size_t size = this->_size;
+    assert(i < size);
+    assert(j < size);
+    double* data = this->_data;
+
+    double tmp = data[i];
+    data[i] = data[j];
+    data[j] = tmp;
 }
 
 double DenseVector::norm2() {
@@ -98,7 +110,7 @@ double* copyOrSame(double* array, size_t size, bool inplace) {
     }
 
     double* newData = new double[size];
-    memcpy(newData, array, size * sizeof(double*));
+    memcpy(newData, array, size * sizeof(double));
     return newData;
 }
 
@@ -129,6 +141,17 @@ size_t DenseVector::size() {
 double* DenseVector::getData() {
     return this->_data;
 }
+
+DenseVector DenseVector::copy() {
+    double* data = this->_data;
+    size_t size = this->_size;
+
+    double* newData = new double[size];
+    memcpy(newData, data, size * sizeof(double));
+
+    return DenseVector(newData, size);
+}
+
 
 void DenseMatrix::init(double* data, size_t nrow, size_t ncol) {
     this->_nrow = nrow;
@@ -189,6 +212,25 @@ DenseVector DenseMatrix::getRow(size_t row) {
     size_t ncol = this->_ncol;
     double* rowData = &data[row * ncol];
     return DenseVector(rowData, ncol);
+}
+
+void DenseMatrix::swapRows(size_t i, size_t j) {
+    if (i == j) {
+        return;
+    }
+
+    double* data = this->_data;
+    size_t ncol = this->_ncol;
+
+    double* rowI = &data[i * ncol];
+    double* rowJ = &data[j * ncol];
+    double* tmp = new double[ncol];
+
+    size_t size = ncol * sizeof(double);
+    memcpy(tmp, rowI, size);
+    memcpy(rowI, rowJ, size);
+    memcpy(rowJ, tmp, size);
+    delete[] tmp;
 }
 
 
@@ -305,9 +347,76 @@ DenseMatrix DenseMatrix::mmult(DenseMatrix other) {
     return result;
 }
 
-DenseVector DenseMatrix::solve(DenseVector b) {
-    // Gaussian elimination
-    return b;
+DenseMatrix DenseMatrix::copy() {
+    double* data = this->_data;
+    size_t ncol = this->_ncol;
+    size_t nrow = this->_nrow;
+
+    size_t size = ncol * nrow;
+
+    double* newData = new double[size];
+    memcpy(newData, data, size * sizeof(double));
+
+    return DenseMatrix(newData, nrow, ncol);
+}
+
+DenseVector DenseMatrix::solve(DenseVector vector) {
+    // https://martin-thoma.com/solving-linear-equations-with-gaussian-elimination/
+    size_t ncol = this->_ncol;
+    size_t nrow = this->_nrow;
+    assert(nrow == vector.size());
+
+    DenseMatrix U = this->copy();
+    DenseVector b = vector.copy();
+
+    for (size_t row = 0; row < nrow; row++) {
+        // 1. search for the max value in this col
+        double maxel = abs(U.get(row, row));
+        size_t maxrow = row;
+
+        for (size_t k = row + 1; k < nrow; k++) {
+            double el = abs(U.get(row, k));
+            if (el > maxel) {
+                maxel = el;
+                maxrow = k;
+            }
+        }
+
+        // 2. swap the rows
+        if (maxrow != row) {
+            U.swapRows(row, maxrow);
+            b.swap(row, maxrow);
+        }
+
+        // 3. adjust values according to maxel
+        for (size_t k = row + 1; k < nrow; k++) {
+            double c = -U.get(k, row) / maxel;
+            double e;
+
+            for (size_t j = row + 1; j < ncol; j++) {
+                e = U.get(k, j);
+                U.set(k, j, e / c);
+            }
+
+            U.set(k, k, 0);
+            e = b.get(k);
+            b.set(k, e / c);
+        }
+    }
+
+    // 4. Solve for upper triangular matrix U
+    double* x = new double[ncol];
+
+    // ????
+    for (size_t i = nrow; i >= 0; i--) {
+        x[i] = U.get(i, nrow) / U.get(i, i);
+        for (size_t k = i - 1; k >= 0; k--) {
+            double s = U.get(k, i) * x[i];
+            U.set(k, nrow, U.get(k, nrow) - s);
+        }
+    }
+
+    return DenseVector(x, ncol);
 }
 
 DenseMatrix::LUDecomposition DenseMatrix::lu() {
@@ -319,19 +428,6 @@ DenseMatrix::LUDecomposition DenseMatrix::lu() {
 
 DenseMatrix DenseMatrix::inverse() {
     return *this;
-}
-
-DenseMatrix DenseMatrix::clone() {
-    double* data = this->_data;
-    size_t ncol = this->_ncol;
-    size_t nrow = this->_nrow;
-
-    size_t size = ncol * nrow;
-
-    double* newData = new double[size];
-    memcpy(newData, data, size * sizeof(double));
-
-    return DenseMatrix(newData, nrow, ncol);
 }
 
 void DenseVector::printVector() {    
