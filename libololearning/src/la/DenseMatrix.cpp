@@ -362,61 +362,89 @@ DenseMatrix DenseMatrix::copy() {
 
 DenseVector DenseMatrix::solve(DenseVector vector) {
     // https://martin-thoma.com/solving-linear-equations-with-gaussian-elimination/
-    size_t ncol = this->_ncol;
-    size_t nrow = this->_nrow;
-    assert(nrow == vector.size());
+    size_t n = this->_nrow;
+    assert(n == vector.size());
+    assert(this->_nrow == this->_ncol);
 
     DenseMatrix U = this->copy();
     DenseVector b = vector.copy();
 
-    for (size_t row = 0; row < nrow; row++) {
-        // 1. search for the max value in this col
-        double maxel = abs(U.get(row, row));
-        size_t maxrow = row;
+    for (size_t i = 0; i < n - 1; i++) {
+        cout << "step #" << i << " before" << endl;
+        U.printMatrix();
 
-        for (size_t k = row + 1; k < nrow; k++) {
-            double el = abs(U.get(row, k));
+        // 1. search for the max value in this col
+        double maxel = abs(U.get(i, i));
+        size_t maxrow = i;
+
+        for (size_t k = i + 1; k < n; k++) {
+            double el = abs(U.get(k, i));
             if (el > maxel) {
                 maxel = el;
                 maxrow = k;
             }
         }
 
+        cout << "maxelem " << maxel << ", maxrow " << maxrow << endl;
+
         // 2. swap the rows
-        if (maxrow != row) {
-            U.swapRows(row, maxrow);
-            b.swap(row, maxrow);
+        if (maxrow != i) {
+            U.swapRows(i, maxrow);
+            b.swap(i, maxrow);
         }
 
-        // 3. adjust values according to maxel
-        for (size_t k = row + 1; k < nrow; k++) {
-            double c = -U.get(k, row) / maxel;
-            double e;
+        cout << "step #" << i << " swapped the rows " << maxrow << " and " << i << endl;
+        U.printMatrix();
 
-            for (size_t j = row + 1; j < ncol; j++) {
+        cout << endl;
+        // 3. adjust values according to maxel
+        for (size_t k = i + 1; k < n; k++) {
+            cout << "adjusting values according to maxel. k=" << k << endl;
+            double c = -U.get(k, i) / maxel;
+            cout << "c=" << c << endl;
+            double e, a;
+
+            U.set(k, i, 0);
+            for (size_t j = i + 1; j < n; j++) {
                 e = U.get(k, j);
-                U.set(k, j, e / c);
+                a = U.get(i, j);
+                U.set(k, j, e + c * a);
             }
 
-            U.set(k, k, 0);
             e = b.get(k);
-            b.set(k, e / c);
+            a = b.get(i);
+            b.set(k, e + c * a);
+
+            U.printMatrix();
         }
+
+        cout << "step #" << i << " end" <<endl;
+        U.printMatrix();
+        cout << endl;
+        cout << endl;
     }
+
 
     // 4. Solve for upper triangular matrix U
-    double* x = new double[ncol];
-
+    double* x = new double[n];
+    DenseVector res(x, n);
+  
     // ????
-    for (size_t i = nrow; i >= 0; i--) {
-        x[i] = U.get(i, nrow) / U.get(i, i);
-        for (size_t k = i - 1; k >= 0; k--) {
+    for (int i = n - 1; i >= 0; i--) {
+        cout << "iteration " << i << endl;
+        res.printVector();
+
+        x[i] = b.get(i) / U.get(i, i);
+        for (int k = i - 1; k >= 0; k--) {
             double s = U.get(k, i) * x[i];
-            U.set(k, nrow, U.get(k, nrow) - s);
+            U.set(k, n, b.get(k) - s);
         }
     }
 
-    return DenseVector(x, ncol);
+    cout << "done" << endl;
+
+    return res;
+    //return DenseVector(x, n);
 }
 
 DenseMatrix::LUDecomposition DenseMatrix::lu() {
