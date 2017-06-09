@@ -63,10 +63,18 @@ public:
     DenseMatrix mmult(DenseMatrix other);
 
     LUDecomposition lu();
+
+    DenseVector gaussJordanEliminationVector(DenseVector b);
+    DenseMatrix gaussJordanEliminationMatrix(DenseMatrix B);
+
     DenseVector solve(DenseVector b);
+    DenseMatrix solveMatrix(DenseMatrix B);
     DenseMatrix inverse();
 
     DenseMatrix copy();
+
+    size_t numRows();
+    size_t numCols();
 
     void printMatrix();
 

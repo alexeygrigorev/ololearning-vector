@@ -177,7 +177,7 @@ DenseMatrix DenseMatrix::eye(size_t n) {
     DenseMatrix m(n, n);
 
     for (size_t i = 0; i < n; i++) {
-        m.set(i, i, 0);
+        m.set(i, i, 1);
     }
 
     return m;
@@ -360,7 +360,7 @@ DenseMatrix DenseMatrix::copy() {
     return DenseMatrix(newData, nrow, ncol);
 }
 
-DenseVector DenseMatrix::solve(DenseVector vector) {
+DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
     // https://martin-thoma.com/solving-linear-equations-with-gaussian-elimination/
     size_t n = this->_nrow;
     assert(n == vector.size());
@@ -370,9 +370,6 @@ DenseVector DenseMatrix::solve(DenseVector vector) {
     DenseVector b = vector.copy();
 
     for (size_t i = 0; i < n - 1; i++) {
-        cout << "step #" << i << " before" << endl;
-        U.printMatrix();
-
         // 1. search for the max value in this col
         double maxel = abs(U.get(i, i));
         size_t maxrow = i;
@@ -385,67 +382,122 @@ DenseVector DenseMatrix::solve(DenseVector vector) {
             }
         }
 
-        cout << "maxelem " << maxel << ", maxrow " << maxrow << endl;
-
         // 2. swap the rows
         if (maxrow != i) {
             U.swapRows(i, maxrow);
             b.swap(i, maxrow);
         }
 
-        cout << "step #" << i << " swapped the rows " << maxrow << " and " << i << endl;
-        U.printMatrix();
-
-        cout << endl;
         // 3. adjust values according to maxel
         for (size_t k = i + 1; k < n; k++) {
-            cout << "adjusting values according to maxel. k=" << k << endl;
-            double c = -U.get(k, i) / maxel;
-            cout << "c=" << c << endl;
-            double e, a;
+            double rowMultiplier = U.get(k, i) / maxel;
+            double currentValue, rowValue;
 
             U.set(k, i, 0);
             for (size_t j = i + 1; j < n; j++) {
-                e = U.get(k, j);
-                a = U.get(i, j);
-                U.set(k, j, e + c * a);
+                currentValue = U.get(k, j);
+                rowValue = U.get(i, j);
+                U.set(k, j, currentValue - rowMultiplier * rowValue);
             }
 
-            e = b.get(k);
-            a = b.get(i);
-            b.set(k, e + c * a);
-
-            U.printMatrix();
+            currentValue = b.get(k);
+            rowValue = b.get(i);
+            b.set(k, currentValue - rowMultiplier * rowValue);
         }
-
-        cout << "step #" << i << " end" <<endl;
-        U.printMatrix();
-        cout << endl;
-        cout << endl;
     }
 
 
     // 4. Solve for upper triangular matrix U
     double* x = new double[n];
-    DenseVector res(x, n);
-  
-    // ????
+
     for (int i = n - 1; i >= 0; i--) {
-        cout << "iteration " << i << endl;
-        res.printVector();
 
         x[i] = b.get(i) / U.get(i, i);
         for (int k = i - 1; k >= 0; k--) {
             double s = U.get(k, i) * x[i];
-            U.set(k, n, b.get(k) - s);
+            b.set(k, b.get(k) - s);
         }
     }
 
-    cout << "done" << endl;
-
-    return res;
-    //return DenseVector(x, n);
+    return DenseVector(x, n);
 }
+
+DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
+    size_t n = this->_nrow;
+    assert(this->_nrow == this->_ncol);
+    assert(n == matrix.numRows());
+    assert(n == matrix.numCols());
+
+    DenseMatrix U = this->copy();
+    DenseMatrix B = matrix.copy();
+
+    for (size_t i = 0; i < n - 1; i++) {
+        // 1. search for the max value in this col
+        double maxel = abs(U.get(i, i));
+        size_t maxrow = i;
+
+        for (size_t k = i + 1; k < n; k++) {
+            double el = abs(U.get(k, i));
+            if (el > maxel) {
+                maxel = el;
+                maxrow = k;
+            }
+        }
+
+        // 2. swap the rows
+        if (maxrow != i) {
+            U.swapRows(i, maxrow);
+            B.swapRows(i, maxrow);
+        }
+
+        // 3. adjust values according to maxel
+        for (size_t k = i + 1; k < n; k++) {
+            double rowMultiplier = U.get(k, i) / maxel;
+            double currentValue, rowValue;
+
+            U.set(k, i, 0);
+            for (size_t j = i + 1; j < n; j++) {
+                currentValue = U.get(k, j);
+                rowValue = U.get(i, j);
+                U.set(k, j, currentValue - rowMultiplier * rowValue);
+            }
+
+            for (size_t j = 0; j < n; j++) {
+                currentValue = B.get(k, j);
+                rowValue = B.get(i, j);
+                B.set(k, j, currentValue - rowMultiplier * rowValue);
+            }
+            
+        }
+    }
+
+    // 4. Solve for upper triangular matrix U
+    DenseMatrix X(n, n);
+
+    for (int i = n - 1; i >= 0; i--) {
+        for (int j = 0; j < n; j++) {
+            double newVal = B.get(i, j) / U.get(i, i);
+            X.set(i, j, newVal);
+
+            for (int k = i - 1; k >= 0; k--) {
+                double s = U.get(k, i) * newVal;
+                B.set(k, j, B.get(k, j) - s);
+            }
+        }
+    }
+
+    return X;
+}
+
+
+DenseVector DenseMatrix::solve(DenseVector vector) {
+    return this->gaussJordanEliminationVector(vector);
+}
+
+DenseMatrix DenseMatrix::solveMatrix(DenseMatrix matrix) {
+    return this->gaussJordanEliminationMatrix(matrix);
+}
+
 
 DenseMatrix::LUDecomposition DenseMatrix::lu() {
     DenseMatrix::LUDecomposition result;
@@ -455,7 +507,11 @@ DenseMatrix::LUDecomposition DenseMatrix::lu() {
 }
 
 DenseMatrix DenseMatrix::inverse() {
-    return *this;
+    size_t n = this->_nrow;
+    assert(this->_nrow == this->_ncol);
+    DenseMatrix eye = DenseMatrix::eye(n);
+    DenseMatrix inv = this->solveMatrix(eye);
+    return inv;
 }
 
 void DenseVector::printVector() {    
@@ -470,6 +526,14 @@ void DenseVector::printVector() {
     cout << endl;
 }
 
+
+size_t DenseMatrix::numRows() {
+    return this->_nrow;    
+}
+
+size_t DenseMatrix::numCols() {
+    return this->_ncol;
+}
 
 void DenseMatrix::printMatrix() {    
     size_t nrow = this->_nrow;
