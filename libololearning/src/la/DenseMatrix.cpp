@@ -185,17 +185,22 @@ DenseMatrix DenseMatrix::eye(size_t n) {
 
 
 double DenseMatrix::get(size_t row, size_t col) {
+    assert(row < this->_nrow);
+    assert(col < this->_ncol);
     size_t ncol = this->_ncol;
     return this->_data[row * ncol + col];
 }
 
 void DenseMatrix::set(size_t row, size_t col, double val) {
+    assert(row < this->_nrow);
+    assert(col < this->_ncol);
     size_t ncol = this->_ncol;
     double* data = this->_data;
     data[row * ncol + col] = val;
 }
 
 DenseVector DenseMatrix::getColumn(size_t col) {
+    assert(col < this->_ncol);
     size_t nrow = this->_nrow;
 
     double* colData = new double[nrow];
@@ -208,6 +213,7 @@ DenseVector DenseMatrix::getColumn(size_t col) {
 }
 
 DenseVector DenseMatrix::getRow(size_t row) {
+    assert(row < this->_nrow);
     double* data = this->_data;
     size_t ncol = this->_ncol;
     double* rowData = &data[row * ncol];
@@ -215,6 +221,9 @@ DenseVector DenseMatrix::getRow(size_t row) {
 }
 
 void DenseMatrix::swapRows(size_t i, size_t j) {
+    assert(i < this->_nrow);
+    assert(j < this->_nrow);
+
     if (i == j) {
         return;
     }
