@@ -29,14 +29,17 @@ private:
     double* _data;
 };
 
+class DenseMatrix;
+
+struct LUDecomposition {
+    DenseMatrix *P;
+    DenseMatrix *L;
+    DenseMatrix *U;
+};
+
 
 class DenseMatrix {
 public:
-    struct LUDecomposition {
-        DenseMatrix *L;
-        DenseMatrix *U;
-    };
-
 
     DenseMatrix(size_t nrow, size_t ncol);
     DenseMatrix(double* data, size_t nrow, size_t ncol);

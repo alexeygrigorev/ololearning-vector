@@ -446,3 +446,48 @@ TEST_F(TestSuite, MatrixClone) {
     EXPECT_EQ(A.get(0, 0), 1);
 }
 
+
+TEST_F(TestSuite, LUDecomposition4x4) {
+    double dataA[4][4] = {
+        { 7,  3, -1,  2 },
+        { 3,  8,  1, -4 },
+        {-1,  1,  4, -1 },
+        { 2, -4, -1,  6 }
+    };
+
+    double dataP[4][4] = {
+        { 1, 0, 0, 0 },
+        { 0, 1, 0, 0 },
+        { 0, 0, 1, 0 },
+        { 0, 0, 0, 1 }
+    };
+    double dataL[4][4] = {
+        { 1.   ,  0.   ,  0.   ,  0. },
+        { 0.428,  1.   ,  0.   ,  0. },
+        {-0.142,  0.212,  1.   ,  0. },
+        { 0.285, -0.723,  0.089,  1. }
+    };
+    double dataU[4][4] = {
+        { 7.,  3.   , -1.   ,  2.    },
+        { 0.,  6.714,  1.428, -4.857 },
+        { 0.,  0.   ,  3.553,  0.319 },
+        { 0.,  0.   ,  0.   ,  1.886 }
+    };
+
+    DenseMatrix expP(&dataP[0][0], 4, 4);
+    DenseMatrix expL(&dataL[0][0], 4, 4);
+    DenseMatrix expU(&dataU[0][0], 4, 4);
+
+    DenseMatrix A(&dataA[0][0], 4, 4);
+    LUDecomposition result = A.lu();
+
+    double distP = result.P->distance2(expP);
+    ASSERT_TRUE(distP <= 0.00001);
+
+    double distL = result.L->distance2(expL);
+    ASSERT_TRUE(distL <= 0.001);
+
+    double distU = result.U->distance2(expU);
+    ASSERT_TRUE(distU <= 0.001);
+
+}

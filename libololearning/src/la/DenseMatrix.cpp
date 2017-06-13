@@ -169,6 +169,7 @@ DenseMatrix::DenseMatrix(size_t nrow, size_t ncol) {
 }
 
 DenseMatrix::~DenseMatrix() {
+    cout << "Dense Matrix destructor" << endl;
     // delete[] this->_data;
 }
 
@@ -507,11 +508,75 @@ DenseMatrix DenseMatrix::solveMatrix(DenseMatrix matrix) {
     return this->gaussJordanEliminationMatrix(matrix);
 }
 
+// LUDecomposition::~LUDecomposition() {
+//     cout << "destructor called" << endl;
+// }
 
-DenseMatrix::LUDecomposition DenseMatrix::lu() {
-    DenseMatrix::LUDecomposition result;
-    result.L = this;
-    result.U = this;
+LUDecomposition DenseMatrix::lu() {
+    // https://www.quantstart.com/articles/LU-Decomposition-in-Python-and-NumPy
+    size_t n = this->_nrow;
+    assert(this->_nrow == this->_ncol);
+
+    DenseMatrix PA = this->copy();
+    DenseMatrix *P = new DenseMatrix(n, n);
+    DenseMatrix *L = new DenseMatrix(n, n);
+    DenseMatrix *U = new DenseMatrix(n, n);
+
+    // build P: rearrange elements such that max is located on the diagonal
+    for (size_t i = 0; i < n; i++) {
+        P->set(i, i, 1);
+    }
+
+    for (size_t i = 0; i < n; i++) {
+        double maxel = abs(PA.get(i, i));
+        size_t maxrow = i;
+
+        for (size_t k = i + 1; k < n; k++) {
+            double el = abs(PA.get(k, i));
+            if (el > maxel) {
+                maxel = el;
+                maxrow = k;
+            }
+        }
+
+        if (maxrow != i) {
+            PA.swapRows(i, maxrow);
+            P->swapRows(i, maxrow);
+        }
+    }
+
+
+    for (size_t i = 0; i < n; i++) {
+        L->set(i, i, 1);
+
+        for (size_t k = 0; k <= i; k++) {
+            double s1 = 0.0;
+
+            for (size_t j = 0; j < k; j++) {
+                s1 = s1 + U->get(j, i) * L->get(k, j);
+            }
+
+            double p = PA.get(k, i);
+            U->set(k, i, p - s1);
+        }
+
+        for (size_t k = i + 1; k < n; k++) {
+            double s2 = 0.0;
+
+            for (size_t j = 0; j < i; j++) {
+                s2 = s2 + U->get(j, i) * L->get(k, j);
+            }
+
+            double p = PA.get(k, i);
+            double u = U->get(i, i);
+            L->set(k, i, (p - s2) / u);
+        }
+    }
+
+    LUDecomposition result;
+    result.P = P;
+    result.L = L;
+    result.U = U;
     return result;
 }
 
