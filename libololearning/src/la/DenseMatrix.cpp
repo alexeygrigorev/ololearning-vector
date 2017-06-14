@@ -9,13 +9,13 @@
 
 using namespace std;
 
-double* zeroVector(size_t size) {
-    double* data = new double[size];
-    memset(data, 0, size * sizeof(data));
+float* zeroVector(size_t size) {
+    float* data = new float[size];
+    memset(data, 0, size * sizeof(float));
     return data;
 }
 
-double* zeroMatrix(size_t nrow, size_t ncol) {
+float* zeroMatrix(size_t nrow, size_t ncol) {
     return zeroVector(nrow * ncol);
 }
 
@@ -24,7 +24,7 @@ DenseVector::DenseVector(size_t size) {
     this->_size = size;
 }
 
-DenseVector::DenseVector(double* data, size_t size) {
+DenseVector::DenseVector(float* data, size_t size) {
     this->_data = data;
     this->_size = size;
 }
@@ -33,17 +33,17 @@ DenseVector::~DenseVector() {
     // delete[] this->_data;
 }
 
-double DenseVector::get(size_t i) {
+float DenseVector::get(size_t i) {
     size_t size = this->_size;
     assert(i < size);
-    double* data = this->_data;
+    float* data = this->_data;
     return data[i];
 }
 
-void DenseVector::set(size_t i, double val) {
+void DenseVector::set(size_t i, float val) {
     size_t size = this->_size;
     assert(i < size);
-    double* data = this->_data;
+    float* data = this->_data;
     data[i] = val;
 }
 
@@ -51,20 +51,20 @@ void DenseVector::swap(size_t i, size_t j) {
     size_t size = this->_size;
     assert(i < size);
     assert(j < size);
-    double* data = this->_data;
+    float* data = this->_data;
 
-    double tmp = data[i];
+    float tmp = data[i];
     data[i] = data[j];
     data[j] = tmp;
 }
 
-double DenseVector::norm2() {
+float DenseVector::norm2() {
     size_t size = this->_size;
 
-    double* data = this->_data;
-    double norm2 = 0.0;
+    float* data = this->_data;
+    float norm2 = 0.0;
     for (size_t i = 0; i < size; i++) {
-        double el = data[i];
+        float el = data[i];
         norm2 = norm2 + el * el;
     }
 
@@ -72,16 +72,16 @@ double DenseVector::norm2() {
 }
 
 
-double DenseVector::distance2(DenseVector other) {
+float DenseVector::distance2(DenseVector other) {
     size_t size = this->_size;
     assert(size == other._size);
 
-    double* data = this->_data;
-    double* oData = other._data;
+    float* data = this->_data;
+    float* oData = other._data;
 
-    double total = 0.0;
+    float total = 0.0;
     for (size_t i = 0; i < size; i++) {
-        double d = data[i] - oData[i];
+        float d = data[i] - oData[i];
         total = total + d * d;
     }
 
@@ -89,14 +89,14 @@ double DenseVector::distance2(DenseVector other) {
 }
 
 
-double DenseVector::dot(DenseVector other) {
+float DenseVector::dot(DenseVector other) {
     size_t size = this->_size;
     assert(size == other._size);
 
-    double* data = this->_data;
-    double* oData = other._data;
+    float* data = this->_data;
+    float* oData = other._data;
 
-    double total = 0.0;
+    float total = 0.0;
     for (size_t i = 0; i < size; i++) {
         total = total + data[i] * oData[i];
     }
@@ -104,13 +104,13 @@ double DenseVector::dot(DenseVector other) {
     return total;
 }
 
-double* copyOrSame(double* array, size_t size, bool inplace) {
+float* copyOrSame(float* array, size_t size, bool inplace) {
     if (inplace == true) {
         return array;
     }
 
-    double* newData = new double[size];
-    memcpy(newData, array, size * sizeof(double));
+    float* newData = new float[size];
+    memcpy(newData, array, size * sizeof(float));
     return newData;
 }
 
@@ -118,9 +118,9 @@ DenseVector DenseVector::subtract(DenseVector other, bool inplace) {
     size_t size = this->_size;
     assert(size == other._size);
 
-    double* newData = copyOrSame(this->_data, size, inplace);
-    double* data = this->_data;
-    double* oData = other._data;
+    float* newData = copyOrSame(this->_data, size, inplace);
+    float* data = this->_data;
+    float* oData = other._data;
 
     for (size_t i = 0; i < size; i++) {
         newData[i] = data[i] - oData[i];
@@ -138,33 +138,33 @@ size_t DenseVector::size() {
     return this->_size;
 }
 
-double* DenseVector::getData() {
+float* DenseVector::getData() {
     return this->_data;
 }
 
 DenseVector DenseVector::copy() {
-    double* data = this->_data;
+    float* data = this->_data;
     size_t size = this->_size;
 
-    double* newData = new double[size];
-    memcpy(newData, data, size * sizeof(double));
+    float* newData = new float[size];
+    memcpy(newData, data, size * sizeof(float));
 
     return DenseVector(newData, size);
 }
 
 
-void DenseMatrix::init(double* data, size_t nrow, size_t ncol) {
+void DenseMatrix::init(float* data, size_t nrow, size_t ncol) {
     this->_nrow = nrow;
     this->_ncol = ncol;
     this->_data = data;
 }
 
-DenseMatrix::DenseMatrix(double* data, size_t nrow, size_t ncol) {
+DenseMatrix::DenseMatrix(float* data, size_t nrow, size_t ncol) {
     this->init(data, nrow, ncol);
 }
 
 DenseMatrix::DenseMatrix(size_t nrow, size_t ncol) {
-    double* data = zeroMatrix(nrow, ncol);
+    float* data = zeroMatrix(nrow, ncol);
     this->init(data, nrow, ncol);
 }
 
@@ -185,18 +185,18 @@ DenseMatrix DenseMatrix::eye(size_t n) {
 }
 
 
-double DenseMatrix::get(size_t row, size_t col) {
+float DenseMatrix::get(size_t row, size_t col) {
     assert(row < this->_nrow);
     assert(col < this->_ncol);
     size_t ncol = this->_ncol;
     return this->_data[row * ncol + col];
 }
 
-void DenseMatrix::set(size_t row, size_t col, double val) {
+void DenseMatrix::set(size_t row, size_t col, float val) {
     assert(row < this->_nrow);
     assert(col < this->_ncol);
     size_t ncol = this->_ncol;
-    double* data = this->_data;
+    float* data = this->_data;
     data[row * ncol + col] = val;
 }
 
@@ -204,7 +204,7 @@ DenseVector DenseMatrix::getColumn(size_t col) {
     assert(col < this->_ncol);
     size_t nrow = this->_nrow;
 
-    double* colData = new double[nrow];
+    float* colData = new float[nrow];
 
     for (size_t r = 0; r < nrow; r++) {
         colData[r] = this->get(r, col);
@@ -215,9 +215,9 @@ DenseVector DenseMatrix::getColumn(size_t col) {
 
 DenseVector DenseMatrix::getRow(size_t row) {
     assert(row < this->_nrow);
-    double* data = this->_data;
+    float* data = this->_data;
     size_t ncol = this->_ncol;
-    double* rowData = &data[row * ncol];
+    float* rowData = &data[row * ncol];
     return DenseVector(rowData, ncol);
 }
 
@@ -229,14 +229,14 @@ void DenseMatrix::swapRows(size_t i, size_t j) {
         return;
     }
 
-    double* data = this->_data;
+    float* data = this->_data;
     size_t ncol = this->_ncol;
 
-    double* rowI = &data[i * ncol];
-    double* rowJ = &data[j * ncol];
-    double* tmp = new double[ncol];
+    float* rowI = &data[i * ncol];
+    float* rowJ = &data[j * ncol];
+    float* tmp = new float[ncol];
 
-    size_t size = ncol * sizeof(double);
+    size_t size = ncol * sizeof(float);
     memcpy(tmp, rowI, size);
     memcpy(rowI, rowJ, size);
     memcpy(rowJ, tmp, size);
@@ -251,9 +251,9 @@ DenseMatrix DenseMatrix::subtract(DenseMatrix other, bool inplace) {
     assert(nrow == other._nrow);
 
     size_t size = ncol * nrow;
-    double* newData = copyOrSame(this->_data, size, inplace);
-    double* data = this->_data;
-    double* oData = other._data;
+    float* newData = copyOrSame(this->_data, size, inplace);
+    float* data = this->_data;
+    float* oData = other._data;
 
     for (size_t i = 0; i < size; i++) {
         newData[i] = data[i] - oData[i];
@@ -267,22 +267,22 @@ DenseMatrix DenseMatrix::subtract(DenseMatrix other, bool inplace) {
     }
 }
 
-double DenseMatrix::norm2() {
+float DenseMatrix::norm2() {
     size_t ncol = this->_ncol;
     size_t nrow = this->_nrow;
     size_t size = ncol * nrow;
 
-    double* data = this->_data;
-    double norm2 = 0.0;
+    float* data = this->_data;
+    float norm2 = 0.0;
     for (size_t i = 0; i < size; i++) {
-        double el = data[i];
+        float el = data[i];
         norm2 = norm2 + el * el;
     }
 
     return norm2;
 }
 
-double DenseMatrix::distance2(DenseMatrix other) {
+float DenseMatrix::distance2(DenseMatrix other) {
     size_t ncol = this->_ncol;
     size_t nrow = this->_nrow;
     assert(ncol == other._ncol);
@@ -290,12 +290,12 @@ double DenseMatrix::distance2(DenseMatrix other) {
 
     size_t size = ncol * nrow;
 
-    double* data = this->_data;
-    double* oData = other._data;
+    float* data = this->_data;
+    float* oData = other._data;
 
-    double total = 0.0;
+    float total = 0.0;
     for (size_t i = 0; i < size; i++) {
-        double d = data[i] - oData[i];
+        float d = data[i] - oData[i];
         total = total + d * d;
     }
 
@@ -310,7 +310,7 @@ DenseMatrix DenseMatrix::transpose() {
 
     for (size_t i = 0; i < nrow; i++) {
         for (size_t j = 0; j < ncol; j++) {
-            double val = this->get(i, j);
+            float val = this->get(i, j);
             t.set(j, i, val);
         }
     }
@@ -323,7 +323,7 @@ DenseVector DenseMatrix::vmult(DenseVector vec) {
     size_t nrow = this->_nrow;
     assert(this->_ncol == vec.size());
 
-    double* result = new double[nrow];
+    float* result = new float[nrow];
 
     for (size_t i = 0; i < nrow; i++) {
         DenseVector row = this->getRow(i);
@@ -339,15 +339,15 @@ DenseMatrix DenseMatrix::mmult(DenseMatrix other) {
     size_t ncolRes = other._ncol;
 
     size_t size = nrowRes * ncolRes;
-    double* resultData = new double[size];
-    double* dataPtr = resultData;
+    float* resultData = new float[size];
+    float* dataPtr = resultData;
 
     DenseMatrix o = other.transpose();
 
     for (size_t i = 0; i < ncolRes; i++) {
         DenseVector oCol = o.getRow(i);
         DenseVector colRes = this->vmult(oCol);
-        memcpy(dataPtr, colRes.getData(), nrowRes * sizeof(double));
+        memcpy(dataPtr, colRes.getData(), nrowRes * sizeof(float));
 
         dataPtr = dataPtr + nrowRes;
     }
@@ -358,14 +358,14 @@ DenseMatrix DenseMatrix::mmult(DenseMatrix other) {
 }
 
 DenseMatrix DenseMatrix::copy() {
-    double* data = this->_data;
+    float* data = this->_data;
     size_t ncol = this->_ncol;
     size_t nrow = this->_nrow;
 
     size_t size = ncol * nrow;
 
-    double* newData = new double[size];
-    memcpy(newData, data, size * sizeof(double));
+    float* newData = new float[size];
+    memcpy(newData, data, size * sizeof(float));
 
     return DenseMatrix(newData, nrow, ncol);
 }
@@ -381,11 +381,11 @@ DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
 
     for (size_t i = 0; i < n - 1; i++) {
         // 1. search for the max value in this col
-        double maxel = abs(U.get(i, i));
+        float maxel = abs(U.get(i, i));
         size_t maxrow = i;
 
         for (size_t k = i + 1; k < n; k++) {
-            double el = abs(U.get(k, i));
+            float el = abs(U.get(k, i));
             if (el > maxel) {
                 maxel = el;
                 maxrow = k;
@@ -400,8 +400,8 @@ DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
 
         // 3. adjust values according to maxel
         for (size_t k = i + 1; k < n; k++) {
-            double rowMultiplier = U.get(k, i) / maxel;
-            double currentValue, rowValue;
+            float rowMultiplier = U.get(k, i) / maxel;
+            float currentValue, rowValue;
 
             U.set(k, i, 0);
             for (size_t j = i + 1; j < n; j++) {
@@ -418,13 +418,13 @@ DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
 
 
     // 4. Solve for upper triangular matrix U
-    double* x = new double[n];
+    float* x = new float[n];
 
     for (int i = n - 1; i >= 0; i--) {
 
         x[i] = b.get(i) / U.get(i, i);
         for (int k = i - 1; k >= 0; k--) {
-            double s = U.get(k, i) * x[i];
+            float s = U.get(k, i) * x[i];
             b.set(k, b.get(k) - s);
         }
     }
@@ -443,11 +443,11 @@ DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
 
     for (size_t i = 0; i < n - 1; i++) {
         // 1. search for the max value in this col
-        double maxel = abs(U.get(i, i));
+        float maxel = abs(U.get(i, i));
         size_t maxrow = i;
 
         for (size_t k = i + 1; k < n; k++) {
-            double el = abs(U.get(k, i));
+            float el = abs(U.get(k, i));
             if (el > maxel) {
                 maxel = el;
                 maxrow = k;
@@ -456,14 +456,15 @@ DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
 
         // 2. swap the rows
         if (maxrow != i) {
+            cout << "swapping " << i << " and " << maxrow << endl;
             U.swapRows(i, maxrow);
             B.swapRows(i, maxrow);
         }
 
         // 3. adjust values according to maxel
         for (size_t k = i + 1; k < n; k++) {
-            double rowMultiplier = U.get(k, i) / maxel;
-            double currentValue, rowValue;
+            float rowMultiplier = U.get(k, i) / maxel;
+            float currentValue, rowValue;
 
             U.set(k, i, 0);
             for (size_t j = i + 1; j < n; j++) {
@@ -486,11 +487,11 @@ DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
 
     for (int i = n - 1; i >= 0; i--) {
         for (int j = 0; j < n; j++) {
-            double newVal = B.get(i, j) / U.get(i, i);
+            float newVal = B.get(i, j) / U.get(i, i);
             X.set(i, j, newVal);
 
             for (int k = i - 1; k >= 0; k--) {
-                double s = U.get(k, i) * newVal;
+                float s = U.get(k, i) * newVal;
                 B.set(k, j, B.get(k, j) - s);
             }
         }
@@ -528,11 +529,11 @@ LUDecomposition DenseMatrix::lu() {
     }
 
     for (size_t i = 0; i < n; i++) {
-        double maxel = abs(PA.get(i, i));
+        float maxel = abs(PA.get(i, i));
         size_t maxrow = i;
 
         for (size_t k = i + 1; k < n; k++) {
-            double el = abs(PA.get(k, i));
+            float el = abs(PA.get(k, i));
             if (el > maxel) {
                 maxel = el;
                 maxrow = k;
@@ -550,25 +551,25 @@ LUDecomposition DenseMatrix::lu() {
         L->set(i, i, 1);
 
         for (size_t k = 0; k <= i; k++) {
-            double s1 = 0.0;
+            float s1 = 0.0;
 
             for (size_t j = 0; j < k; j++) {
                 s1 = s1 + U->get(j, i) * L->get(k, j);
             }
 
-            double p = PA.get(k, i);
+            float p = PA.get(k, i);
             U->set(k, i, p - s1);
         }
 
         for (size_t k = i + 1; k < n; k++) {
-            double s2 = 0.0;
+            float s2 = 0.0;
 
             for (size_t j = 0; j < i; j++) {
                 s2 = s2 + U->get(j, i) * L->get(k, j);
             }
 
-            double p = PA.get(k, i);
-            double u = U->get(i, i);
+            float p = PA.get(k, i);
+            float u = U->get(i, i);
             L->set(k, i, (p - s2) / u);
         }
     }
@@ -590,7 +591,7 @@ DenseMatrix DenseMatrix::inverse() {
 
 void DenseVector::printVector() {    
     size_t size = this->_size;
-    double* data = this->_data;
+    float* data = this->_data;
 
     cout << "size: " << size << endl;
     for (size_t i = 0; i < size; i++) {
