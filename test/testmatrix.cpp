@@ -132,6 +132,20 @@ TEST_F(TestSuite, MatrixInitializedWithArray) {
     EXPECT_EQ(m.get(3, 2), 1.0);
 }
 
+TEST_F(TestSuite, MatrixClone) {
+    float dataA[2][2] = {
+        { 1, 2 },
+        { 2, 2 },
+    };
+    DenseMatrix A(&dataA[0][0], 2, 2);
+    DenseMatrix copy = A.copy();
+    copy.set(0, 0, 2);
+
+    EXPECT_EQ(copy.get(0, 0), 2);
+    EXPECT_EQ(A.get(0, 0), 1);
+}
+
+
 TEST_F(TestSuite, MatrixGetColumn) {
     const int nrow = 4, ncol = 3;
     float data[nrow][ncol] = {
@@ -437,46 +451,77 @@ TEST_F(TestSuite, MatrixInverse2x2) {
     ASSERT_TRUE(dist <= 0.000001);
 }
 
-
-TEST_F(TestSuite, MatrixInverse100x100) {
-    int seed = 10;
-    std::uniform_real_distribution<float> rnd(0, 1);
-    std::mt19937_64 rng(seed);
-
-    int n = 3;
-    int size = n * n;
-    float* data = new float[size];
-    for (int i = 0; i < size; i++) {
-        data[i] = floor(100 * rnd(rng));
-    }
-
-    DenseMatrix A(data, n, n);
-    A.printMatrix();
-
-    DenseMatrix AInv = A.inverse();
-    DenseMatrix AAinv = A.mmult(AInv);
-    AAinv.printMatrix();
-
-    DenseMatrix I = DenseMatrix::eye(n);
-
-    float dist = AAinv.distance2(I);
-    cout << "error: " << dist << endl;
-    ASSERT_TRUE(dist <= 1e-6);
-}
-
-
-TEST_F(TestSuite, MatrixClone) {
-    float dataA[2][2] = {
-        { 1, 2 },
-        { 2, 2 },
+TEST_F(TestSuite, MatrixSolve3x3_2) {
+    float dataA[3][3] = {
+        { 60, 91, 26 },
+        { 60,  3, 75 },
+        { 45, 90, 31 }
     };
-    DenseMatrix A(&dataA[0][0], 2, 2);
-    DenseMatrix copy = A.copy();
-    copy.set(0, 0, 2);
+    float dataB[3] = { 1, 0, 0 };
+    float dataXExp[3] = { 0.053, -0.012, -0.042 };
 
-    EXPECT_EQ(copy.get(0, 0), 2);
-    EXPECT_EQ(A.get(0, 0), 1);
+    DenseMatrix A(&dataA[0][0], 3, 3);
+    DenseVector b(&dataB[0], 3);
+    DenseVector x = A.solve(b);
+
+    x.printVector();
+    
+    DenseVector expX(&dataXExp[0], 3);
+
+    float dist = x.distance2(expX);
+    ASSERT_TRUE(dist <= 0.001);
 }
+
+
+// TEST_F(TestSuite, MatrixInverse3x3) {
+//     float dataA[3][3] = {
+//         { 60, 91, 26 },
+//         { 60,  3, 75 },
+//         { 45, 90, 31 }
+//     };
+//     float dataAInv[3][3] = {
+//         {  0.053,  0.003, -0.054 },
+//         { -0.012, -0.005,  0.023 },
+//         { -0.042,  0.010,  0.042 }
+//     };
+
+//     DenseMatrix A(&dataA[0][0], 3, 3);
+//     DenseMatrix AInv = A.inverse();
+//     AInv.printMatrix();
+
+//     DenseMatrix expAInv(&dataAInv[0][0], 3, 3);
+
+//     float dist = AInv.distance2(expAInv);
+//     ASSERT_TRUE(dist <= 0.001);
+// }
+
+// TEST_F(TestSuite, MatrixInverse100x100) {
+//     int seed = 10;
+//     std::uniform_real_distribution<float> rnd(0, 1);
+//     std::mt19937_64 rng(seed);
+
+//     int n = 3;
+//     int size = n * n;
+//     float* data = new float[size];
+//     for (int i = 0; i < size; i++) {
+//         data[i] = floor(100 * rnd(rng));
+//     }
+
+//     DenseMatrix A(data, n, n);
+//     A.printMatrix();
+
+//     DenseMatrix AInv = A.inverse();
+//     DenseMatrix AAinv = A.mmult(AInv);
+//     AAinv.printMatrix();
+
+//     DenseMatrix I = DenseMatrix::eye(n);
+
+//     float dist = AAinv.distance2(I);
+//     cout << "error: " << dist << endl;
+//     ASSERT_TRUE(dist <= 1e-6);
+// }
+
+
 
 
 TEST_F(TestSuite, LUDecomposition4x4) {
