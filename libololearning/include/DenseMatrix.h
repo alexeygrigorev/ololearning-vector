@@ -67,11 +67,14 @@ public:
 
     LUDecomposition lu();
 
-    DenseVector gaussJordanEliminationVector(DenseVector b);
-    DenseMatrix gaussJordanEliminationMatrix(DenseMatrix B);
+    // DenseVector gaussJordanEliminationVector(DenseVector b);
+    // DenseMatrix gaussJordanEliminationMatrix(DenseMatrix B);
 
     DenseVector solve(DenseVector b);
     DenseMatrix solveMatrix(DenseMatrix B);
+
+    DenseMatrix inverseGaussJordan();
+    DenseMatrix inverseLU();
     DenseMatrix inverse();
 
     DenseMatrix copy();

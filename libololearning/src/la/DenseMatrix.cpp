@@ -371,13 +371,14 @@ DenseMatrix DenseMatrix::copy() {
     return DenseMatrix(newData, nrow, ncol);
 }
 
-DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
-    // https://martin-thoma.com/solving-linear-equations-with-gaussian-elimination/
-    size_t n = this->_nrow;
-    assert(n == vector.size());
-    assert(this->_nrow == this->_ncol);
 
-    DenseMatrix U = this->copy();
+DenseVector gaussJordanEliminationVector(DenseMatrix *A, DenseVector vector) {
+    // https://martin-thoma.com/solving-linear-equations-with-gaussian-elimination/
+    size_t n = A->numRows();
+    assert(n == vector.size());
+    assert(A->numRows() == A->numCols());
+
+    DenseMatrix U = A->copy();
     DenseVector b = vector.copy();
 
     for (size_t i = 0; i < n - 1; i++) {
@@ -438,15 +439,15 @@ DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
     return DenseVector(x, n);
 }
 
-DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
-    size_t n = this->_nrow;
 
-    assert(this->_nrow == this->_ncol);
+DenseMatrix gaussJordanEliminationMatrix(DenseMatrix *A, DenseMatrix matrix) {
+    size_t n = A->numRows();
+    assert(A->numRows() == A->numCols());
     assert(n == matrix.numRows());
 
     size_t bNumCols = matrix.numCols();
 
-    DenseMatrix U = this->copy();
+    DenseMatrix U = A->copy();
     DenseMatrix B = matrix.copy();
 
     for (size_t i = 0; i < n - 1; i++) {
@@ -513,14 +514,14 @@ DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
     return X;
 }
 
-
 DenseVector DenseMatrix::solve(DenseVector vector) {
-    return this->gaussJordanEliminationVector(vector);
+    return gaussJordanEliminationVector(this, vector);
 }
 
 DenseMatrix DenseMatrix::solveMatrix(DenseMatrix matrix) {
-    return this->gaussJordanEliminationMatrix(matrix);
+    return gaussJordanEliminationMatrix(this, matrix);
 }
+
 
 // LUDecomposition::~LUDecomposition() {
 //     cout << "destructor called" << endl;
@@ -594,12 +595,87 @@ LUDecomposition DenseMatrix::lu() {
     return result;
 }
 
-DenseMatrix DenseMatrix::inverse() {
+DenseMatrix DenseMatrix::inverseGaussJordan() {
     size_t n = this->_nrow;
     assert(this->_nrow == this->_ncol);
     DenseMatrix eye = DenseMatrix::eye(n);
     DenseMatrix inv = this->solveMatrix(eye);
     return inv;
+}
+
+
+DenseMatrix* upperTriangularSolveMatrix(DenseMatrix *U, DenseMatrix *matrix) {
+    size_t n = U->numRows();
+    assert(U->numRows() == U->numCols());
+    assert(n == matrix->numRows());
+    // check that U is upper triangular ?
+
+    size_t bNumCols = matrix->numCols();
+    DenseMatrix B = matrix->copy();
+
+    DenseMatrix *X = new DenseMatrix(n, bNumCols);
+
+    for (int i = n - 1; i >= 0; i--) {
+        for (int j = 0; j < bNumCols; j++) {
+            float newVal = B.get(i, j) / U->get(i, i);
+            X->set(i, j, newVal);
+
+            for (int k = i - 1; k >= 0; k--) {
+                float s = U->get(k, i) * newVal;
+                B.set(k, j, B.get(k, j) - s);
+            }
+        }
+    }
+
+    return X;
+}
+
+DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix) {
+    size_t n = L->numRows();
+    assert(L->numRows() == L->numCols());
+    assert(n == matrix->numRows());
+    // check that U is upper triangular ?
+
+    size_t bNumCols = matrix->numCols();
+    DenseMatrix B = matrix->copy();
+
+    DenseMatrix *X = new DenseMatrix(n, bNumCols);
+
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < bNumCols; j++) {
+            float newVal = B.get(i, j) / L->get(i, i);
+            X->set(i, j, newVal);
+ 
+            for (size_t k = i + 1; k < n; k++) {
+                float s = L->get(k, i) * newVal;
+                B.set(k, j, B.get(k, j) - s);
+            }
+        }
+    }
+
+    return X;
+}
+
+
+DenseMatrix DenseMatrix::inverseLU() {
+    assert(this->_nrow == this->_ncol);
+    LUDecomposition PLU = this->lu();
+
+    DenseMatrix *P = PLU.P, *L = PLU.L, *U = PLU.U;
+
+    DenseMatrix *Y = lowerTriangularSolveMatrix(L, P);
+    DenseMatrix *X = upperTriangularSolveMatrix(U, Y);
+
+    delete P;
+    delete L;
+    delete U;
+    delete Y;
+
+    return *X;
+}
+
+DenseMatrix DenseMatrix::inverse() {
+    return this->inverseGaussJordan();
 }
 
 void DenseVector::printVector() {    

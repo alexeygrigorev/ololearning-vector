@@ -587,8 +587,32 @@ TEST_F(TestSuite, MatrixSolve3x3_Singular) {
     }
 }
 
+TEST_F(TestSuite, MatrixInverse50x50) {
+    int seed = 10;
+    std::mt19937_64 random_gen(seed);
+    std::uniform_real_distribution<float> unif_random(0, 1);
 
-TEST_F(TestSuite, MatrixInverse100x100) {
+    int n = 50;
+    int size = n * n;
+    float* data = new float[size];
+    for (int i = 0; i < size; i++) {
+        data[i] = unif_random(random_gen);
+    }
+
+    DenseMatrix A(data, n, n);
+
+    DenseMatrix AInv = A.inverse();
+    DenseMatrix AAinv = A.mmult(AInv);
+
+    DenseMatrix I = DenseMatrix::eye(n);
+
+    float dist = AAinv.distance2(I);
+    cout << "error: " << dist << endl;
+    ASSERT_TRUE(dist <= 1e-6);
+}
+
+
+TEST_F(TestSuite, MatrixInverseGJ100x100) {
     int seed = 10;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
@@ -602,7 +626,7 @@ TEST_F(TestSuite, MatrixInverse100x100) {
 
     DenseMatrix A(data, n, n);
 
-    DenseMatrix AInv = A.inverse();
+    DenseMatrix AInv = A.inverseGaussJordan();
     DenseMatrix AAinv = A.mmult(AInv);
 
     DenseMatrix I = DenseMatrix::eye(n);
@@ -655,5 +679,58 @@ TEST_F(TestSuite, LUDecomposition4x4) {
 
     float distU = result.U->distance2(expU);
     ASSERT_TRUE(distU <= 0.001);
+}
 
+TEST_F(TestSuite, MatrixLU50x50) {
+    int seed = 10;
+    std::mt19937_64 random_gen(seed);
+    std::uniform_real_distribution<float> unif_random(0, 1);
+
+    int n = 50;
+    int size = n * n;
+    float* data = new float[size];
+    for (int i = 0; i < size; i++) {
+        data[i] = unif_random(random_gen);
+    }
+
+    DenseMatrix A(data, n, n);
+
+    LUDecomposition PLU = A.lu();
+    DenseMatrix *P = PLU.P, *L = PLU.L, *U = PLU.U;
+
+    DenseMatrix PA = P->mmult(A);
+    DenseMatrix LU = L->mmult(*U);
+
+    float dist = PA.distance2(LU);
+    cout << "error: " << dist << endl;
+    ASSERT_TRUE(dist <= 1e-6);
+
+    delete P;
+    delete L;
+    delete U;
+}
+
+
+TEST_F(TestSuite, MatrixInverseLU100x100) {
+    int seed = 100;
+    std::mt19937_64 random_gen(seed);
+    std::uniform_real_distribution<float> unif_random(0, 1);
+
+    int n = 100;
+    int size = n * n;
+    float* data = new float[size];
+    for (int i = 0; i < size; i++) {
+        data[i] = unif_random(random_gen);
+    }
+
+    DenseMatrix A(data, n, n);
+
+    DenseMatrix AInv = A.inverseLU();
+    DenseMatrix AAinv = A.mmult(AInv);
+
+    DenseMatrix I = DenseMatrix::eye(n);
+
+    float dist = AAinv.distance2(I);
+    cout << "error: " << dist << endl;
+    ASSERT_TRUE(dist <= 1e-4);
 }
