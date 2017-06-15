@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 
+#include <stdexcept>
 #include <cassert>
 
 #include "DenseMatrix.h"
@@ -398,21 +399,26 @@ DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
             b.swap(i, maxrow);
         }
 
+        maxel = U.get(i, i);
+        if (abs(maxel) <= 1e-6) {
+            throw invalid_argument("the matrix is singular");
+        }
+
         // 3. adjust values according to maxel
         for (size_t k = i + 1; k < n; k++) {
-            float rowMultiplier = U.get(k, i) / maxel;
+            float m = U.get(k, i) / maxel;
             float currentValue, rowValue;
 
             U.set(k, i, 0);
             for (size_t j = i + 1; j < n; j++) {
                 currentValue = U.get(k, j);
                 rowValue = U.get(i, j);
-                U.set(k, j, currentValue - rowMultiplier * rowValue);
+                U.set(k, j, currentValue - m * rowValue);
             }
 
             currentValue = b.get(k);
             rowValue = b.get(i);
-            b.set(k, currentValue - rowMultiplier * rowValue);
+            b.set(k, currentValue - m * rowValue);
         }
     }
 
@@ -434,9 +440,11 @@ DenseVector DenseMatrix::gaussJordanEliminationVector(DenseVector vector) {
 
 DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
     size_t n = this->_nrow;
+
     assert(this->_nrow == this->_ncol);
     assert(n == matrix.numRows());
-    assert(n == matrix.numCols());
+
+    size_t bNumCols = matrix.numCols();
 
     DenseMatrix U = this->copy();
     DenseMatrix B = matrix.copy();
@@ -456,12 +464,17 @@ DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
 
         // 2. swap the rows
         if (maxrow != i) {
-            cout << "swapping " << i << " and " << maxrow << endl;
             U.swapRows(i, maxrow);
             B.swapRows(i, maxrow);
         }
 
+        maxel = U.get(i, i);
+        if (abs(maxel) <= 1e-6) {
+            throw invalid_argument("the matrix is singular");
+        }
+
         // 3. adjust values according to maxel
+        maxel = U.get(i, i);
         for (size_t k = i + 1; k < n; k++) {
             float rowMultiplier = U.get(k, i) / maxel;
             float currentValue, rowValue;
@@ -473,7 +486,7 @@ DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
                 U.set(k, j, currentValue - rowMultiplier * rowValue);
             }
 
-            for (size_t j = 0; j < n; j++) {
+            for (size_t j = 0; j < bNumCols; j++) {
                 currentValue = B.get(k, j);
                 rowValue = B.get(i, j);
                 B.set(k, j, currentValue - rowMultiplier * rowValue);
@@ -483,10 +496,10 @@ DenseMatrix DenseMatrix::gaussJordanEliminationMatrix(DenseMatrix matrix) {
     }
 
     // 4. Solve for upper triangular matrix U
-    DenseMatrix X(n, n);
+    DenseMatrix X(n, bNumCols);
 
     for (int i = n - 1; i >= 0; i--) {
-        for (int j = 0; j < n; j++) {
+        for (int j = 0; j < bNumCols; j++) {
             float newVal = B.get(i, j) / U.get(i, i);
             X.set(i, j, newVal);
 
