@@ -42,6 +42,12 @@ struct LUDecomposition {
 };
 
 
+struct QRDecomposition {
+    DenseMatrix *QT;
+    DenseMatrix *R;
+};
+
+
 class DenseMatrix {
 public:
 
@@ -71,17 +77,17 @@ public:
 
     LUDecomposition lu();
 
-    // DenseVector gaussJordanEliminationVector(DenseVector b);
-    // DenseMatrix gaussJordanEliminationMatrix(DenseMatrix B);
-
     DenseVector solve(DenseVector b);
     DenseMatrix solveMatrix(DenseMatrix B);
 
     DenseMatrix inverseGaussJordan();
     DenseMatrix inverseLU();
+    DenseMatrix inverseQR();
     DenseMatrix inverse();
 
     DenseMatrix orthonormalize();
+
+    QRDecomposition qr();
 
     DenseMatrix copy();
 

@@ -704,17 +704,20 @@ DenseMatrix DenseMatrix::inverseLU() {
 }
 
 DenseMatrix DenseMatrix::inverse() {
-    return this->inverseGaussJordan();
+    return this->inverseQR();
 }
 
+
+void arrayScale(float *data, float scale, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+         data[i] = data[i] * scale;
+    }
+}
 
 void arrayUnitize(float *data, size_t size) {
     float norm2 = arrayNorm2(data, size);
     float norm = sqrt(norm2);
-
-    for (size_t i = 0; i < size; i++) {
-         data[i] = data[i] / norm;
-    }
+    arrayScale(data, 1 / norm, size);
 }
 
 float arrayDot(float *u, float *v, size_t size) {
@@ -725,9 +728,9 @@ float arrayDot(float *u, float *v, size_t size) {
     return dot;
 }
 
-void axpy(float a, float *x, float *y, size_t size) {
+void addScaledVector(float* target, float *source, float scale, size_t size) {
     for (size_t i = 0; i < size; i++) {
-        y[i] = a * x[i] + y[i];
+        target[i] = target[i] + scale * source[i];
     }
 }
 
@@ -735,28 +738,77 @@ DenseMatrix DenseMatrix::orthonormalize() {
     assert(this->_nrow == this->_ncol);
     size_t n = this->_nrow;
 
-    DenseMatrix C = this->transpose();
+    DenseMatrix QT = this->transpose();
 
-    float* data = C._data;
-    size_t ncol = C._ncol;
+    float* data = QT._data;
+    size_t ncol = QT._ncol;
 
     arrayUnitize(data, ncol);
 
     for (size_t i = 1; i < n; i++) {
-        float* row_i = &data[i * ncol];
+        float* q_i = &data[i * ncol];
 
         for (size_t j = 0; j < i; j++) {
-            float* row_j = &data[j * ncol];
-            float t = -arrayDot(row_i, row_j, ncol);
-            axpy(t, row_j, row_i, ncol);
+            float* q_j = &data[j * ncol];
+            float t = -arrayDot(q_i, q_j, ncol);
+            addScaledVector(q_i, q_j, t, ncol);
         }
 
-        arrayUnitize(row_i, ncol);        
+        arrayUnitize(q_i, ncol);        
     }
 
-    return C.transpose();
+    return QT.transpose();
 }
 
+
+QRDecomposition DenseMatrix::qr() {
+    assert(this->_nrow == this->_ncol);
+    size_t n = this->_nrow;
+
+    DenseMatrix QT = this->transpose();
+    DenseMatrix *R = new DenseMatrix(n, n);
+
+    float* data = QT._data;
+    size_t ncol = QT._ncol;
+
+    for (int i = 0; i < n; i++) {
+        float* q_i = &data[i * ncol];
+
+        for (int j = 0; j < i; j++) {
+            float* q_j = &data[j * ncol];
+            float t = arrayDot(q_i, q_j, ncol);
+            R->set(j, i, t);
+            addScaledVector(q_i, q_j, -t, ncol);
+        }
+
+        float norm2 = arrayNorm2(q_i, ncol);
+        float norm = sqrt(norm2);
+        R->set(i, i, norm);
+        arrayScale(q_i, 1 / norm, ncol);    
+    }
+
+    QRDecomposition result;
+    // hack - otherwise QT gets destructed 
+    result.QT = new DenseMatrix(QT._data, n, n);
+    result.R = R;
+    return result;
+}
+
+DenseMatrix DenseMatrix::inverseQR() {
+    assert(this->_nrow == this->_ncol);
+    size_t n = this->_nrow;
+
+    QRDecomposition QR = this->qr();
+
+    DenseMatrix *QT = QR.QT, *R = QR.R;
+
+    DenseMatrix *X = upperTriangularSolveMatrix(R, QT);
+
+    delete QT;
+    delete R;
+
+    return *X;
+}
 
 void DenseVector::printVector() {    
     size_t size = this->_size;

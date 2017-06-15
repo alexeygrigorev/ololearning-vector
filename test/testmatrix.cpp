@@ -809,3 +809,65 @@ TEST_F(TestSuite, MatrixGramSchmidt) {
 }
 
 
+TEST_F(TestSuite, MatrixQR_100x100) {
+    int seed = 100;
+    std::mt19937_64 random_gen(seed);
+    std::uniform_real_distribution<float> unif_random(0, 1);
+
+    int n = 100;
+    int size = n * n;
+    float* data = new float[size];
+    for (int i = 0; i < size; i++) {
+        data[i] = unif_random(random_gen);
+    }
+
+    DenseMatrix A(data, n, n);
+
+    QRDecomposition qr = A.qr();
+    DenseMatrix *QT = qr.QT, *R = qr.R;
+
+    DenseMatrix Q = QT->transpose();
+    DenseMatrix QR = Q.mmult(*R);
+    float dist0 = QR.distance2(A);
+    ASSERT_TRUE(dist0 <= 1e-4);
+
+    DenseMatrix QTQ = QT->mmult(Q);
+    DenseMatrix QQT = Q.mmult(*QT);
+    DenseMatrix I = DenseMatrix::eye(n);
+
+    float dist1 = QTQ.distance2(I);
+    ASSERT_TRUE(dist1 <= 1e-4);
+
+    float dist2 = QQT.distance2(I);
+    ASSERT_TRUE(dist2 <= 1e-4);
+
+    DenseMatrix QTA = QT->mmult(A);
+    float dist3 = QTA.distance2(*R);
+    ASSERT_TRUE(dist3 <= 1e-4);
+
+}
+
+
+TEST_F(TestSuite, MatrixInverseQR100x100) {
+    int seed = 100;
+    std::mt19937_64 random_gen(seed);
+    std::uniform_real_distribution<float> unif_random(0, 1);
+
+    int n = 100;
+    int size = n * n;
+    float* data = new float[size];
+    for (int i = 0; i < size; i++) {
+        data[i] = unif_random(random_gen);
+    }
+
+    DenseMatrix A(data, n, n);
+
+    DenseMatrix AInv = A.inverseQR();
+    DenseMatrix AAinv = A.mmult(AInv);
+
+    DenseMatrix I = DenseMatrix::eye(n);
+
+    float dist = AAinv.distance2(I);
+    cout << "error: " << dist << endl;
+    ASSERT_TRUE(dist <= 1e-4);
+}
