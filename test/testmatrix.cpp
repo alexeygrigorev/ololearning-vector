@@ -61,6 +61,47 @@ TEST_F(TestSuite, VectorNorm2) {
     EXPECT_EQ(norm2, expected);
 }
 
+TEST_F(TestSuite, VectorScale) {
+    const size_t size = 4;
+    float* data = new float[size] { 0, 1, 2, 3 };
+
+    DenseVector v(data, size);
+    DenseVector u = v.scale(2, false);
+
+    float* dataScaled = new float[size] { 0, 2, 4, 6 };
+    DenseVector scaled(dataScaled, size);
+
+    float dist = u.distance2(scaled);
+    ASSERT_TRUE(dist <= 1e-6);
+}
+
+
+TEST_F(TestSuite, VectorUnitNormalize) {
+    const size_t size = 4;
+    float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
+
+    DenseVector v(data, size);
+    DenseVector u = v.unitize(false);
+
+    EXPECT_EQ(1 + 4 + 9, v.norm2());   
+    ASSERT_TRUE(abs(u.norm2() - 1) < 1e-6);
+}
+
+
+TEST_F(TestSuite, VectorUnitNormalizeInplace) {
+    const size_t size = 4;
+    float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
+
+    DenseVector v(data, size);
+    v.unitize(true);
+
+    float norm2 = v.norm2();
+    ASSERT_TRUE(abs(norm2 - 1) < 1e-6);
+}
+
+
+
+
 TEST_F(TestSuite, VectorDistance2) {
     const size_t size = 4;
     float* data1 = new float[size] { 0.0, 1.0, 2.0, 3.0 };
@@ -734,3 +775,37 @@ TEST_F(TestSuite, MatrixInverseLU100x100) {
     cout << "error: " << dist << endl;
     ASSERT_TRUE(dist <= 1e-4);
 }
+
+
+TEST_F(TestSuite, MatrixGramSchmidt) {
+    int seed = 100;
+    std::mt19937_64 random_gen(seed);
+    std::uniform_real_distribution<float> unif_random(0, 1);
+
+    int n = 100;
+    int size = n * n;
+    float* data = new float[size];
+    for (int i = 0; i < size; i++) {
+        data[i] = unif_random(random_gen);
+    }
+
+    DenseMatrix A(data, n, n);
+
+    DenseMatrix Q = A.orthonormalize();
+
+    DenseMatrix QT = Q.transpose();
+    DenseMatrix QTQ = QT.mmult(Q);
+    DenseMatrix QQT = Q.mmult(QT);
+
+    DenseMatrix I = DenseMatrix::eye(n);
+
+    float dist1 = QTQ.distance2(I);
+    cout << dist1 << endl;
+    ASSERT_TRUE(dist1 <= 1e-4);
+
+    float dist2 = QQT.distance2(I);
+    ASSERT_TRUE(dist2 <= 1e-4);
+
+}
+
+

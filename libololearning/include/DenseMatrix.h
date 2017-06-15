@@ -12,11 +12,15 @@ public:
     void swap(size_t i, size_t j);
 
     float norm2();
+    DenseVector unitize(bool inplace);
 
     float distance2(DenseVector other);
     float dot(DenseVector other);
 
+    DenseVector scale(float scalar, bool inplace);
     DenseVector subtract(DenseVector other, bool inplace);
+
+    DenseVector project(DenseVector u);
 
     void printVector();
 
@@ -76,6 +80,8 @@ public:
     DenseMatrix inverseGaussJordan();
     DenseMatrix inverseLU();
     DenseMatrix inverse();
+
+    DenseMatrix orthonormalize();
 
     DenseMatrix copy();
 

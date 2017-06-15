@@ -59,10 +59,8 @@ void DenseVector::swap(size_t i, size_t j) {
     data[j] = tmp;
 }
 
-float DenseVector::norm2() {
-    size_t size = this->_size;
 
-    float* data = this->_data;
+float arrayNorm2(float* data, size_t size) {
     float norm2 = 0.0;
     for (size_t i = 0; i < size; i++) {
         float el = data[i];
@@ -72,6 +70,23 @@ float DenseVector::norm2() {
     return norm2;
 }
 
+
+float DenseVector::norm2() {
+    size_t size = this->_size;
+    float* data = this->_data;
+    return arrayNorm2(data, size);
+}
+
+
+float* copyOrSame(float* array, size_t size, bool inplace) {
+    if (inplace == true) {
+        return array;
+    }
+
+    float* newData = new float[size];
+    memcpy(newData, array, size * sizeof(float));
+    return newData;
+}
 
 float DenseVector::distance2(DenseVector other) {
     size_t size = this->_size;
@@ -105,14 +120,33 @@ float DenseVector::dot(DenseVector other) {
     return total;
 }
 
-float* copyOrSame(float* array, size_t size, bool inplace) {
-    if (inplace == true) {
-        return array;
+
+// project this on u
+DenseVector DenseVector::project(DenseVector u) {
+    float vu = this->dot(u);
+    float uNorm2 = u.norm2();
+    float x = vu / uNorm2;
+    return u.scale(x, false);
+}
+
+DenseVector DenseVector::scale(float scalar, bool inplace) {
+    size_t size = this->_size;
+    float* data = copyOrSame(this->_data, size, inplace);
+
+    for (size_t i = 0; i < size; i++) {
+        data[i] = data[i] * scalar;
     }
 
-    float* newData = new float[size];
-    memcpy(newData, array, size * sizeof(float));
-    return newData;
+    if (inplace == true) {
+        return *this;
+    } else {
+        return DenseVector(data, size);
+    }    
+}
+
+DenseVector DenseVector::unitize(bool inplace) {
+    float normInv = 1 / sqrt(this->norm2());
+    return this->scale(normInv, inplace);
 }
 
 DenseVector DenseVector::subtract(DenseVector other, bool inplace) {
@@ -130,10 +164,11 @@ DenseVector DenseVector::subtract(DenseVector other, bool inplace) {
     if (inplace == true) {
         return *this;
     } else {
-        DenseVector result(newData, size);
-        return result;
+        return DenseVector(newData, size);
     }
 }
+
+
 
 size_t DenseVector::size() {
     return this->_size;
@@ -274,13 +309,7 @@ float DenseMatrix::norm2() {
     size_t size = ncol * nrow;
 
     float* data = this->_data;
-    float norm2 = 0.0;
-    for (size_t i = 0; i < size; i++) {
-        float el = data[i];
-        norm2 = norm2 + el * el;
-    }
-
-    return norm2;
+    return arrayNorm2(data, size);
 }
 
 float DenseMatrix::distance2(DenseMatrix other) {
@@ -677,6 +706,57 @@ DenseMatrix DenseMatrix::inverseLU() {
 DenseMatrix DenseMatrix::inverse() {
     return this->inverseGaussJordan();
 }
+
+
+void arrayUnitize(float *data, size_t size) {
+    float norm2 = arrayNorm2(data, size);
+    float norm = sqrt(norm2);
+
+    for (size_t i = 0; i < size; i++) {
+         data[i] = data[i] / norm;
+    }
+}
+
+float arrayDot(float *u, float *v, size_t size) {
+    float dot = 0;
+    for (size_t i = 0; i < size; i++) {
+        dot = dot + u[i] * v[i];
+    }
+    return dot;
+}
+
+void axpy(float a, float *x, float *y, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        y[i] = a * x[i] + y[i];
+    }
+}
+
+DenseMatrix DenseMatrix::orthonormalize() {
+    assert(this->_nrow == this->_ncol);
+    size_t n = this->_nrow;
+
+    DenseMatrix C = this->transpose();
+
+    float* data = C._data;
+    size_t ncol = C._ncol;
+
+    arrayUnitize(data, ncol);
+
+    for (size_t i = 1; i < n; i++) {
+        float* row_i = &data[i * ncol];
+
+        for (size_t j = 0; j < i; j++) {
+            float* row_j = &data[j * ncol];
+            float t = -arrayDot(row_i, row_j, ncol);
+            axpy(t, row_j, row_i, ncol);
+        }
+
+        arrayUnitize(row_i, ncol);        
+    }
+
+    return C.transpose();
+}
+
 
 void DenseVector::printVector() {    
     size_t size = this->_size;
