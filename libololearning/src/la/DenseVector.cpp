@@ -7,9 +7,10 @@
 #include <cassert>
 
 #include "DenseVector.h"
-#include "math_utils.cpp"
+#include "math_utils.h"
 
 using namespace std;
+using namespace olomath;
 
 
 DenseVector::DenseVector(size_t size) {

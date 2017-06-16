@@ -8,9 +8,10 @@
 
 #include "DenseVector.h"
 #include "DenseMatrix.h"
-#include "math_utils.cpp"
+#include "math_utils.h"
 
 using namespace std;
+using namespace olomath;
 
 void DenseMatrix::init(float* data, size_t nrow, size_t ncol) {
     this->_nrow = nrow;
