@@ -22,41 +22,41 @@ public:
     DenseMatrix(float* data, size_t nrow, size_t ncol);
     ~DenseMatrix();
 
-    static DenseMatrix eye(size_t n);
-    static DenseMatrix ones(size_t nrow, size_t ncol);
+    static DenseMatrix* eye(size_t n);
+    static DenseMatrix* ones(size_t nrow, size_t ncol);
     
     float get(size_t row, size_t col);
     void set(size_t row, size_t col, float val);
 
     float norm2();
 
-    DenseVector getColumn(size_t col);
-    DenseVector getRow(size_t row);
+    DenseVector* getColumn(size_t col);
+    DenseVector* getRow(size_t row);
     void swapRows(size_t i, size_t j);
 
-    float distance2(DenseMatrix other);
-    DenseMatrix subtract(DenseMatrix other, bool inplace);
+    float distance2(DenseMatrix *other);
+    DenseMatrix* subtract(DenseMatrix *other, bool inplace);
 
-    DenseMatrix transpose(); 
+    DenseMatrix* transpose(); 
 
-    DenseVector vmult(DenseVector other);
-    DenseMatrix mmult(DenseMatrix other);
+    DenseVector* vmult(DenseVector *other);
+    DenseMatrix* mmult(DenseMatrix *other);
 
     LUDecomposition lu();
 
-    DenseVector solve(DenseVector b);
-    DenseMatrix solveMatrix(DenseMatrix B);
+    DenseVector* solve(DenseVector *b);
+    DenseMatrix* solveMatrix(DenseMatrix *B);
 
-    DenseMatrix inverseGaussJordan();
-    DenseMatrix inverseLU();
-    DenseMatrix inverseQR();
-    DenseMatrix inverse();
+    DenseMatrix* inverseGaussJordan();
+    DenseMatrix* inverseLU();
+    DenseMatrix* inverseQR();
+    DenseMatrix* inverse();
 
-    DenseMatrix orthonormalize();
+    DenseMatrix* orthonormalize();
 
     QRDecomposition qr();
 
-    DenseMatrix copy();
+    DenseMatrix* copy();
 
     size_t numRows();
     size_t numCols();

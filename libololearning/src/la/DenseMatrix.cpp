@@ -34,11 +34,11 @@ DenseMatrix::~DenseMatrix() {
 }
 
 
-DenseMatrix DenseMatrix::eye(size_t n) {
-    DenseMatrix m(n, n);
+DenseMatrix* DenseMatrix::eye(size_t n) {
+    DenseMatrix *m = new DenseMatrix(n, n);
 
     for (size_t i = 0; i < n; i++) {
-        m.set(i, i, 1);
+        m->set(i, i, 1);
     }
 
     return m;
@@ -60,7 +60,7 @@ void DenseMatrix::set(size_t row, size_t col, float val) {
     data[row * ncol + col] = val;
 }
 
-DenseVector DenseMatrix::getColumn(size_t col) {
+DenseVector* DenseMatrix::getColumn(size_t col) {
     assert(col < this->_ncol);
     size_t nrow = this->_nrow;
 
@@ -70,15 +70,15 @@ DenseVector DenseMatrix::getColumn(size_t col) {
         colData[r] = this->get(r, col);
     }
 
-    return DenseVector(colData, nrow);
+    return new DenseVector(colData, nrow);
 }
 
-DenseVector DenseMatrix::getRow(size_t row) {
+DenseVector* DenseMatrix::getRow(size_t row) {
     assert(row < this->_nrow);
     float* data = this->_data;
     size_t ncol = this->_ncol;
     float* rowData = &data[row * ncol];
-    return DenseVector(rowData, ncol);
+    return new DenseVector(rowData, ncol);
 }
 
 void DenseMatrix::swapRows(size_t i, size_t j) {
@@ -104,26 +104,25 @@ void DenseMatrix::swapRows(size_t i, size_t j) {
 }
 
 
-DenseMatrix DenseMatrix::subtract(DenseMatrix other, bool inplace) {
+DenseMatrix* DenseMatrix::subtract(DenseMatrix *other, bool inplace) {
     size_t ncol = this->_ncol;
     size_t nrow = this->_nrow;
-    assert(ncol == other._ncol);
-    assert(nrow == other._nrow);
+    assert(ncol == other->_ncol);
+    assert(nrow == other->_nrow);
 
     size_t size = ncol * nrow;
     float* newData = copyOrSame(this->_data, size, inplace);
     float* data = this->_data;
-    float* oData = other._data;
+    float* oData = other->_data;
 
     for (size_t i = 0; i < size; i++) {
         newData[i] = data[i] - oData[i];
     }
 
     if (inplace == true) {
-        return *this;
+        return this;
     } else {
-        DenseMatrix result(newData, nrow, ncol);
-        return result;
+        return new DenseMatrix(newData, nrow, ncol);
     }
 }
 
@@ -136,16 +135,16 @@ float DenseMatrix::norm2() {
     return arrayNorm2(data, size);
 }
 
-float DenseMatrix::distance2(DenseMatrix other) {
+float DenseMatrix::distance2(DenseMatrix *other) {
     size_t ncol = this->_ncol;
     size_t nrow = this->_nrow;
-    assert(ncol == other._ncol);
-    assert(nrow == other._nrow);
+    assert(ncol == other->_ncol);
+    assert(nrow == other->_nrow);
 
     size_t size = ncol * nrow;
 
     float* data = this->_data;
-    float* oData = other._data;
+    float* oData = other->_data;
 
     float total = 0.0;
     for (size_t i = 0; i < size; i++) {
@@ -156,16 +155,16 @@ float DenseMatrix::distance2(DenseMatrix other) {
     return total;
 }
 
-DenseMatrix DenseMatrix::transpose() {
+DenseMatrix* DenseMatrix::transpose() {
     size_t ncol = this->_ncol;
     size_t nrow = this->_nrow;
 
-    DenseMatrix t(ncol, nrow);
+    DenseMatrix *t = new DenseMatrix(ncol, nrow);
 
     for (size_t i = 0; i < nrow; i++) {
         for (size_t j = 0; j < ncol; j++) {
             float val = this->get(i, j);
-            t.set(j, i, val);
+            t->set(j, i, val);
         }
     }
 
@@ -173,45 +172,44 @@ DenseMatrix DenseMatrix::transpose() {
 }
 
 
-DenseVector DenseMatrix::vmult(DenseVector vec) {
+DenseVector* DenseMatrix::vmult(DenseVector *vec) {
     size_t nrow = this->_nrow;
-    assert(this->_ncol == vec.size());
+    assert(this->_ncol == vec->size());
 
     float* result = new float[nrow];
 
     for (size_t i = 0; i < nrow; i++) {
-        DenseVector row = this->getRow(i);
-        result[i] = row.dot(vec);
+        DenseVector *row = this->getRow(i);
+        result[i] = row->dot(*vec);
     }
 
-    return DenseVector(result, nrow);
+    return new DenseVector(result, nrow);
 }
 
-DenseMatrix DenseMatrix::mmult(DenseMatrix other) {
-    assert(this->_ncol == other._nrow);
+DenseMatrix* DenseMatrix::mmult(DenseMatrix *other) {
+    assert(this->_ncol == other->_nrow);
     size_t nrowRes = this->_nrow;
-    size_t ncolRes = other._ncol;
+    size_t ncolRes = other->_ncol;
 
     size_t size = nrowRes * ncolRes;
     float* resultData = new float[size];
     float* dataPtr = resultData;
 
-    DenseMatrix o = other.transpose();
+    DenseMatrix* o = other->transpose();
 
     for (size_t i = 0; i < ncolRes; i++) {
-        DenseVector oCol = o.getRow(i);
-        DenseVector colRes = this->vmult(oCol);
-        memcpy(dataPtr, colRes.getData(), nrowRes * sizeof(float));
+        DenseVector* oCol = o->getRow(i);
+        DenseVector* colRes = this->vmult(oCol);
+        memcpy(dataPtr, colRes->getData(), nrowRes * sizeof(float));
 
         dataPtr = dataPtr + nrowRes;
     }
 
     DenseMatrix resT(resultData, ncolRes, nrowRes);
-    DenseMatrix result = resT.transpose();
-    return result;
+    return resT.transpose();
 }
 
-DenseMatrix DenseMatrix::copy() {
+DenseMatrix* DenseMatrix::copy() {
     float* data = this->_data;
     size_t ncol = this->_ncol;
     size_t nrow = this->_nrow;
@@ -221,26 +219,27 @@ DenseMatrix DenseMatrix::copy() {
     float* newData = new float[size];
     memcpy(newData, data, size * sizeof(float));
 
-    return DenseMatrix(newData, nrow, ncol);
+    return new DenseMatrix(newData, nrow, ncol);
 }
 
 
-DenseVector gaussJordanEliminationVector(DenseMatrix *A, DenseVector vector) {
+DenseVector* gaussJordanEliminationVector(DenseMatrix *A, DenseVector *vector) {
     // https://martin-thoma.com/solving-linear-equations-with-gaussian-elimination/
     size_t n = A->numRows();
-    assert(n == vector.size());
+    assert(n == vector->size());
     assert(A->numRows() == A->numCols());
 
-    DenseMatrix U = A->copy();
-    DenseVector b = vector.copy();
+    DenseMatrix *U = A->copy();
+    DenseVector copy = vector->copy();
+    DenseVector *b = &copy;
 
     for (size_t i = 0; i < n - 1; i++) {
         // 1. search for the max value in this col
-        float maxel = abs(U.get(i, i));
+        float maxel = abs(U->get(i, i));
         size_t maxrow = i;
 
         for (size_t k = i + 1; k < n; k++) {
-            float el = abs(U.get(k, i));
+            float el = abs(U->get(k, i));
             if (el > maxel) {
                 maxel = el;
                 maxrow = k;
@@ -249,30 +248,30 @@ DenseVector gaussJordanEliminationVector(DenseMatrix *A, DenseVector vector) {
 
         // 2. swap the rows
         if (maxrow != i) {
-            U.swapRows(i, maxrow);
-            b.swap(i, maxrow);
+            U->swapRows(i, maxrow);
+            b->swap(i, maxrow);
         }
 
-        maxel = U.get(i, i);
+        maxel = U->get(i, i);
         if (abs(maxel) <= 1e-6) {
             throw invalid_argument("the matrix is singular");
         }
 
         // 3. adjust values according to maxel
         for (size_t k = i + 1; k < n; k++) {
-            float m = U.get(k, i) / maxel;
+            float m = U->get(k, i) / maxel;
             float currentValue, rowValue;
 
-            U.set(k, i, 0);
+            U->set(k, i, 0);
             for (size_t j = i + 1; j < n; j++) {
-                currentValue = U.get(k, j);
-                rowValue = U.get(i, j);
-                U.set(k, j, currentValue - m * rowValue);
+                currentValue = U->get(k, j);
+                rowValue = U->get(i, j);
+                U->set(k, j, currentValue - m * rowValue);
             }
 
-            currentValue = b.get(k);
-            rowValue = b.get(i);
-            b.set(k, currentValue - m * rowValue);
+            currentValue = b->get(k);
+            rowValue = b->get(i);
+            b->set(k, currentValue - m * rowValue);
         }
     }
 
@@ -281,35 +280,34 @@ DenseVector gaussJordanEliminationVector(DenseMatrix *A, DenseVector vector) {
     float* x = new float[n];
 
     for (int i = n - 1; i >= 0; i--) {
-
-        x[i] = b.get(i) / U.get(i, i);
+        x[i] = b->get(i) / U->get(i, i);
         for (int k = i - 1; k >= 0; k--) {
-            float s = U.get(k, i) * x[i];
-            b.set(k, b.get(k) - s);
+            float s = U->get(k, i) * x[i];
+            b->set(k, b->get(k) - s);
         }
     }
 
-    return DenseVector(x, n);
+    return new DenseVector(x, n);
 }
 
 
-DenseMatrix gaussJordanEliminationMatrix(DenseMatrix *A, DenseMatrix matrix) {
+DenseMatrix* gaussJordanEliminationMatrix(DenseMatrix *A, DenseMatrix *matrix) {
     size_t n = A->numRows();
     assert(A->numRows() == A->numCols());
-    assert(n == matrix.numRows());
+    assert(n == matrix->numRows());
 
-    size_t bNumCols = matrix.numCols();
+    size_t bNumCols = matrix->numCols();
 
-    DenseMatrix U = A->copy();
-    DenseMatrix B = matrix.copy();
+    DenseMatrix *U = A->copy();
+    DenseMatrix *B = matrix->copy();
 
     for (size_t i = 0; i < n - 1; i++) {
         // 1. search for the max value in this col
-        float maxel = abs(U.get(i, i));
+        float maxel = abs(U->get(i, i));
         size_t maxrow = i;
 
         for (size_t k = i + 1; k < n; k++) {
-            float el = abs(U.get(k, i));
+            float el = abs(U->get(k, i));
             if (el > maxel) {
                 maxel = el;
                 maxrow = k;
@@ -318,48 +316,48 @@ DenseMatrix gaussJordanEliminationMatrix(DenseMatrix *A, DenseMatrix matrix) {
 
         // 2. swap the rows
         if (maxrow != i) {
-            U.swapRows(i, maxrow);
-            B.swapRows(i, maxrow);
+            U->swapRows(i, maxrow);
+            B->swapRows(i, maxrow);
         }
 
-        maxel = U.get(i, i);
+        maxel = U->get(i, i);
         if (abs(maxel) <= 1e-6) {
             throw invalid_argument("the matrix is singular");
         }
 
         // 3. adjust values according to maxel
-        maxel = U.get(i, i);
+        maxel = U->get(i, i);
         for (size_t k = i + 1; k < n; k++) {
-            float rowMultiplier = U.get(k, i) / maxel;
+            float rowMultiplier = U->get(k, i) / maxel;
             float currentValue, rowValue;
 
-            U.set(k, i, 0);
+            U->set(k, i, 0);
             for (size_t j = i + 1; j < n; j++) {
-                currentValue = U.get(k, j);
-                rowValue = U.get(i, j);
-                U.set(k, j, currentValue - rowMultiplier * rowValue);
+                currentValue = U->get(k, j);
+                rowValue = U->get(i, j);
+                U->set(k, j, currentValue - rowMultiplier * rowValue);
             }
 
             for (size_t j = 0; j < bNumCols; j++) {
-                currentValue = B.get(k, j);
-                rowValue = B.get(i, j);
-                B.set(k, j, currentValue - rowMultiplier * rowValue);
+                currentValue = B->get(k, j);
+                rowValue = B->get(i, j);
+                B->set(k, j, currentValue - rowMultiplier * rowValue);
             }
             
         }
     }
 
     // 4. Solve for upper triangular matrix U
-    DenseMatrix X(n, bNumCols);
+    DenseMatrix *X = new DenseMatrix(n, bNumCols);
 
     for (int i = n - 1; i >= 0; i--) {
         for (int j = 0; j < bNumCols; j++) {
-            float newVal = B.get(i, j) / U.get(i, i);
-            X.set(i, j, newVal);
+            float newVal = B->get(i, j) / U->get(i, i);
+            X->set(i, j, newVal);
 
             for (int k = i - 1; k >= 0; k--) {
-                float s = U.get(k, i) * newVal;
-                B.set(k, j, B.get(k, j) - s);
+                float s = U->get(k, i) * newVal;
+                B->set(k, j, B->get(k, j) - s);
             }
         }
     }
@@ -367,11 +365,11 @@ DenseMatrix gaussJordanEliminationMatrix(DenseMatrix *A, DenseMatrix matrix) {
     return X;
 }
 
-DenseVector DenseMatrix::solve(DenseVector vector) {
+DenseVector* DenseMatrix::solve(DenseVector *vector) {
     return gaussJordanEliminationVector(this, vector);
 }
 
-DenseMatrix DenseMatrix::solveMatrix(DenseMatrix matrix) {
+DenseMatrix* DenseMatrix::solveMatrix(DenseMatrix *matrix) {
     return gaussJordanEliminationMatrix(this, matrix);
 }
 
@@ -385,7 +383,7 @@ LUDecomposition DenseMatrix::lu() {
     size_t n = this->_nrow;
     assert(this->_nrow == this->_ncol);
 
-    DenseMatrix PA = this->copy();
+    DenseMatrix *PA = this->copy();
     DenseMatrix *P = new DenseMatrix(n, n);
     DenseMatrix *L = new DenseMatrix(n, n);
     DenseMatrix *U = new DenseMatrix(n, n);
@@ -396,11 +394,11 @@ LUDecomposition DenseMatrix::lu() {
     }
 
     for (size_t i = 0; i < n; i++) {
-        float maxel = abs(PA.get(i, i));
+        float maxel = abs(PA->get(i, i));
         size_t maxrow = i;
 
         for (size_t k = i + 1; k < n; k++) {
-            float el = abs(PA.get(k, i));
+            float el = abs(PA->get(k, i));
             if (el > maxel) {
                 maxel = el;
                 maxrow = k;
@@ -408,7 +406,7 @@ LUDecomposition DenseMatrix::lu() {
         }
 
         if (maxrow != i) {
-            PA.swapRows(i, maxrow);
+            PA->swapRows(i, maxrow);
             P->swapRows(i, maxrow);
         }
     }
@@ -424,7 +422,7 @@ LUDecomposition DenseMatrix::lu() {
                 s1 = s1 + U->get(j, i) * L->get(k, j);
             }
 
-            float p = PA.get(k, i);
+            float p = PA->get(k, i);
             U->set(k, i, p - s1);
         }
 
@@ -435,7 +433,7 @@ LUDecomposition DenseMatrix::lu() {
                 s2 = s2 + U->get(j, i) * L->get(k, j);
             }
 
-            float p = PA.get(k, i);
+            float p = PA->get(k, i);
             float u = U->get(i, i);
             L->set(k, i, (p - s2) / u);
         }
@@ -448,11 +446,11 @@ LUDecomposition DenseMatrix::lu() {
     return result;
 }
 
-DenseMatrix DenseMatrix::inverseGaussJordan() {
+DenseMatrix* DenseMatrix::inverseGaussJordan() {
     size_t n = this->_nrow;
     assert(this->_nrow == this->_ncol);
-    DenseMatrix eye = DenseMatrix::eye(n);
-    DenseMatrix inv = this->solveMatrix(eye);
+    DenseMatrix *eye = DenseMatrix::eye(n);
+    DenseMatrix *inv = this->solveMatrix(eye);
     return inv;
 }
 
@@ -464,18 +462,17 @@ DenseMatrix* upperTriangularSolveMatrix(DenseMatrix *U, DenseMatrix *matrix) {
     // check that U is upper triangular ?
 
     size_t bNumCols = matrix->numCols();
-    DenseMatrix B = matrix->copy();
-
+    DenseMatrix *B = matrix->copy();
     DenseMatrix *X = new DenseMatrix(n, bNumCols);
 
     for (int i = n - 1; i >= 0; i--) {
         for (int j = 0; j < bNumCols; j++) {
-            float newVal = B.get(i, j) / U->get(i, i);
+            float newVal = B->get(i, j) / U->get(i, i);
             X->set(i, j, newVal);
 
             for (int k = i - 1; k >= 0; k--) {
                 float s = U->get(k, i) * newVal;
-                B.set(k, j, B.get(k, j) - s);
+                B->set(k, j, B->get(k, j) - s);
             }
         }
     }
@@ -490,18 +487,18 @@ DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix) {
     // check that U is upper triangular ?
 
     size_t bNumCols = matrix->numCols();
-    DenseMatrix B = matrix->copy();
+    DenseMatrix *B = matrix->copy();
 
     DenseMatrix *X = new DenseMatrix(n, bNumCols);
 
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < bNumCols; j++) {
-            float newVal = B.get(i, j) / L->get(i, i);
+            float newVal = B->get(i, j) / L->get(i, i);
             X->set(i, j, newVal);
  
             for (size_t k = i + 1; k < n; k++) {
                 float s = L->get(k, i) * newVal;
-                B.set(k, j, B.get(k, j) - s);
+                B->set(k, j, B->get(k, j) - s);
             }
         }
     }
@@ -509,7 +506,7 @@ DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix) {
     return X;
 }
 
-DenseMatrix DenseMatrix::inverseLU() {
+DenseMatrix* DenseMatrix::inverseLU() {
     assert(this->_nrow == this->_ncol);
     LUDecomposition PLU = this->lu();
 
@@ -523,21 +520,21 @@ DenseMatrix DenseMatrix::inverseLU() {
     delete U;
     delete Y;
 
-    return *X;
+    return X;
 }
 
-DenseMatrix DenseMatrix::inverse() {
+DenseMatrix* DenseMatrix::inverse() {
     return this->inverseQR();
 }
 
-DenseMatrix DenseMatrix::orthonormalize() {
+DenseMatrix* DenseMatrix::orthonormalize() {
     assert(this->_nrow == this->_ncol);
     size_t n = this->_nrow;
 
-    DenseMatrix QT = this->transpose();
+    DenseMatrix *QT = this->transpose();
 
-    float* data = QT._data;
-    size_t ncol = QT._ncol;
+    float* data = QT->_data;
+    size_t ncol = QT->_ncol;
 
     arrayUnitize(data, ncol);
 
@@ -553,7 +550,7 @@ DenseMatrix DenseMatrix::orthonormalize() {
         arrayUnitize(q_i, ncol);        
     }
 
-    return QT.transpose();
+    return QT->transpose();
 }
 
 
@@ -561,11 +558,11 @@ QRDecomposition DenseMatrix::qr() {
     assert(this->_nrow == this->_ncol);
     size_t n = this->_nrow;
 
-    DenseMatrix QT = this->transpose();
+    DenseMatrix *QT = this->transpose();
     DenseMatrix *R = new DenseMatrix(n, n);
 
-    float* data = QT._data;
-    size_t ncol = QT._ncol;
+    float* data = QT->_data;
+    size_t ncol = QT->_ncol;
 
     for (int i = 0; i < n; i++) {
         float* q_i = &data[i * ncol];
@@ -585,25 +582,24 @@ QRDecomposition DenseMatrix::qr() {
 
     QRDecomposition result;
     // hack - otherwise QT gets destructed 
-    result.QT = new DenseMatrix(QT._data, n, n);
+    result.QT = new DenseMatrix(data, n, n);
     result.R = R;
     return result;
 }
 
-DenseMatrix DenseMatrix::inverseQR() {
+DenseMatrix* DenseMatrix::inverseQR() {
     assert(this->_nrow == this->_ncol);
     size_t n = this->_nrow;
 
     QRDecomposition QR = this->qr();
 
     DenseMatrix *QT = QR.QT, *R = QR.R;
-
     DenseMatrix *X = upperTriangularSolveMatrix(R, QT);
 
     delete QT;
     delete R;
 
-    return *X;
+    return X;
 }
 
 

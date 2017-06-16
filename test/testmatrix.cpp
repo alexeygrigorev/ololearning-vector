@@ -180,10 +180,10 @@ TEST_F(TestSuite, MatrixClone) {
         { 2, 2 },
     };
     DenseMatrix A(&dataA[0][0], 2, 2);
-    DenseMatrix copy = A.copy();
-    copy.set(0, 0, 2);
+    DenseMatrix *copy = A.copy();
+    copy->set(0, 0, 2);
 
-    EXPECT_EQ(copy.get(0, 0), 2);
+    EXPECT_EQ(copy->get(0, 0), 2);
     EXPECT_EQ(A.get(0, 0), 1);
 }
 
@@ -197,13 +197,13 @@ TEST_F(TestSuite, MatrixGetColumn) {
         {9.0, 0.0, 1.0},
     };
 
-    DenseMatrix m(&data[0][0], nrow, ncol);
-    DenseVector col = m.getColumn(1);
+    DenseMatrix M(&data[0][0], nrow, ncol);
+    DenseVector *col = M.getColumn(1);
 
     float colData[nrow] = { 1.0, 4.0, 7.0, 0.0 };
     DenseVector expected(&colData[0], nrow);
 
-    float diff = col.distance2(expected);
+    float diff = col->distance2(expected);
     EXPECT_EQ(0, diff);
 }
 
@@ -216,13 +216,13 @@ TEST_F(TestSuite, MatrixGetRow) {
         {9.0, 0.0, 1.0},
     };
 
-    DenseMatrix m(&data[0][0], nrow, ncol);
-    DenseVector row = m.getRow(1);
+    DenseMatrix M(&data[0][0], nrow, ncol);
+    DenseVector *row = M.getRow(1);
 
     float rowData[ncol] = { 3.0, 4.0, 5.0 };
     DenseVector expected(&rowData[0], ncol);
 
-    float diff = row.distance2(expected);
+    float diff = row->distance2(expected);
     EXPECT_EQ(0, diff);
 }
 
@@ -235,18 +235,24 @@ TEST_F(TestSuite, MatrixSwapRow) {
         {9.0, 0.0, 1.0},
     };
 
-    DenseMatrix m(&data[0][0], nrow, ncol);
-    m.swapRows(1, 2);
+    DenseMatrix M(&data[0][0], nrow, ncol);
+    M.swapRows(1, 2);
 
-    DenseVector row1 = m.getRow(1);
+
+    DenseVector *row1 = M.getRow(1);
     float rowData1[ncol] = { 6.0, 7.0, 8.0 };
     DenseVector expected1(&rowData1[0], ncol);
-    EXPECT_EQ(0, row1.distance2(expected1));
 
-    DenseVector row2 = m.getRow(2);
+    float dist1 = row1->distance2(expected1);
+    EXPECT_EQ(0, dist1);
+
+
+    DenseVector *row2 = M.getRow(2);
     float rowData2[ncol] = { 3.0, 4.0, 5.0 };
     DenseVector expected2(&rowData2[0], ncol);
-    EXPECT_EQ(0, row2.distance2(expected2));
+
+    float dist2 = row2->distance2(expected2);
+    EXPECT_EQ(0, dist2);
 }
 
 TEST_F(TestSuite, MatrixSubtract) {
@@ -261,17 +267,17 @@ TEST_F(TestSuite, MatrixSubtract) {
         {9.0, 0.0, 1.0},
     };
 
-    DenseMatrix m1(&data1[0][0], nrow, ncol);
-    DenseMatrix m2(&data2[0][0], nrow, ncol);
+    DenseMatrix M1(&data1[0][0], nrow, ncol);
+    DenseMatrix M2(&data2[0][0], nrow, ncol);
 
-    DenseMatrix res = m1.subtract(m2, false);
+    DenseMatrix *res = M1.subtract(&M2, false);
 
-    EXPECT_EQ(res.get(0, 0), -6.0);
-    EXPECT_EQ(res.get(0, 1), -6.0);
-    EXPECT_EQ(res.get(0, 2), -6.0);
-    EXPECT_EQ(res.get(1, 0), -6.0);
-    EXPECT_EQ(res.get(1, 1), 4.0);
-    EXPECT_EQ(res.get(1, 2), 4.0);
+    EXPECT_EQ(res->get(0, 0), -6.0);
+    EXPECT_EQ(res->get(0, 1), -6.0);
+    EXPECT_EQ(res->get(0, 2), -6.0);
+    EXPECT_EQ(res->get(1, 0), -6.0);
+    EXPECT_EQ(res->get(1, 1),  4.0);
+    EXPECT_EQ(res->get(1, 2),  4.0);
 }
 
 TEST_F(TestSuite, MatrixNorm2) {
@@ -301,7 +307,7 @@ TEST_F(TestSuite, MatrixDistance2) {
     DenseMatrix m1(&data1[0][0], nrow, ncol);
     DenseMatrix m2(&data2[0][0], nrow, ncol);
 
-    float diff = m1.distance2(m2);
+    float diff = m1.distance2(&m2);
     float expected = 4.0 + 1.0 + 1.0;
 
     EXPECT_EQ(diff, expected);
@@ -323,11 +329,11 @@ TEST_F(TestSuite, MatrixTranspose) {
     };
 
     DenseMatrix m(&data[0][0], nrow, ncol);
-    DenseMatrix t = m.transpose();
+    DenseMatrix *t = m.transpose();
 
     DenseMatrix expT(&expectedData[0][0], ncol, nrow);
 
-    float dist = t.distance2(expT);
+    float dist = t->distance2(&expT);
     EXPECT_EQ(dist, 0);
 }
 
@@ -342,13 +348,13 @@ TEST_F(TestSuite, MatrixVectorMult) {
     float vdata[ncol] = { 1.0, 2.0, 3.0 };
     float edata[nrow] = { 8., 26., 44., 12. };
 
-    DenseMatrix m(&data[0][0], nrow, ncol);
+    DenseMatrix M(&data[0][0], nrow, ncol);
     DenseVector v(&vdata[0], ncol);
 
-    DenseVector res = m.vmult(v);
+    DenseVector *res = M.vmult(&v);
     DenseVector expected(&edata[0], nrow);
 
-    float dist = res.distance2(expected);
+    float dist = res->distance2(expected);
     EXPECT_EQ(dist, 0);
 }
 
@@ -373,9 +379,9 @@ TEST_F(TestSuite, MatrixMatrixMult) {
     DenseMatrix B(&dataB[0][0], 2, 4);
     DenseMatrix expC(&dataC[0][0], 3, 4);
 
-    DenseMatrix C = A.mmult(B);
+    DenseMatrix *C = A.mmult(&B);
 
-    float dist = C.distance2(expC);
+    float dist = C->distance2(&expC);
     EXPECT_EQ(dist, 0);
 }
 
@@ -391,11 +397,11 @@ TEST_F(TestSuite, MatrixSolve3x3Simple) {
 
     DenseMatrix A(&dataA[0][0], 3, 3);
     DenseVector b(&dataB[0], 3);
-    DenseVector x = A.solve(b);
+    DenseVector *x = A.solve(&b);
 
     DenseVector expX(&dataXExp[0], 3);
     
-    float dist = x.distance2(expX);
+    float dist = x->distance2(expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -412,11 +418,11 @@ TEST_F(TestSuite, MatrixSolve3x3) {
 
     DenseMatrix A(&dataA[0][0], 3, 3);
     DenseVector b(&dataB[0], 3);
-    DenseVector x = A.solve(b);
+    DenseVector *x = A.solve(&b);
     
     DenseVector expX(&dataXExp[0], 3);
 
-    float dist = x.distance2(expX);
+    float dist = x->distance2(expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -439,11 +445,11 @@ TEST_F(TestSuite, MatrixSolve3x3Matrix) {
 
     DenseMatrix A(&dataA[0][0], 3, 3);
     DenseMatrix B(&dataB[0][0], 3, 3);
-    DenseMatrix X = A.solveMatrix(B);
+    DenseMatrix *X = A.solveMatrix(&B);
 
     DenseMatrix expX(&dataXExp[0][0], 3, 3);
 
-    float dist = X.distance2(expX);
+    float dist = X->distance2(&expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -466,12 +472,11 @@ TEST_F(TestSuite, MatrixSolve3x3Matrix_SmallB) {
 
     DenseMatrix A(&dataA[0][0], 3, 3);
     DenseMatrix B(&dataB[0][0], 3, 1);
-    DenseMatrix X = A.solveMatrix(B);
-    cout << X.numRows() << ", " << X.numCols() << endl;
+    DenseMatrix *X = A.solveMatrix(&B);
 
     DenseMatrix expX(&dataXExp[0][0], 3, 1);
 
-    float dist = X.distance2(expX);
+    float dist = X->distance2(&expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -494,11 +499,11 @@ TEST_F(TestSuite, MatrixSolve3x3Matrix_WideB) {
 
     DenseMatrix A(&dataA[0][0], 3, 3);
     DenseMatrix B(&dataB[0][0], 3, 6);
-    DenseMatrix X = A.solveMatrix(B);
+    DenseMatrix *X = A.solveMatrix(&B);
 
     DenseMatrix expX(&dataXExp[0][0], 3, 6);
 
-    float dist = X.distance2(expX);
+    float dist = X->distance2(&expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -522,11 +527,11 @@ TEST_F(TestSuite, MatrixSolve3x3MatrixInverse) {
 
     DenseMatrix A(&dataA[0][0], 3, 3);
     DenseMatrix B(&dataB[0][0], 3, 3);
-    DenseMatrix X = A.solveMatrix(B);
+    DenseMatrix *X = A.solveMatrix(&B);
 
     DenseMatrix expX(&dataXExp[0][0], 3, 3);
 
-    float dist = X.distance2(expX);
+    float dist = X->distance2(&expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -541,11 +546,11 @@ TEST_F(TestSuite, MatrixInverse2x2) {
     };
 
     DenseMatrix A(&dataA[0][0], 2, 2);
-    DenseMatrix AInv = A.inverse();
+    DenseMatrix *AInv = A.inverse();
 
     DenseMatrix expAInv(&dataAInv[0][0], 2, 2);
 
-    float dist = AInv.distance2(expAInv);
+    float dist = AInv->distance2(&expAInv);
     ASSERT_TRUE(dist <= 0.000001);
 }
 
@@ -560,11 +565,11 @@ TEST_F(TestSuite, VectorSolve3x3_2) {
 
     DenseMatrix A(&dataA[0][0], 3, 3);
     DenseVector b(&dataB[0], 3);
-    DenseVector x = A.solve(b);
+    DenseVector *x = A.solve(&b);
     
     DenseVector expX(&dataXExp[0], 3);
 
-    float dist = x.distance2(expX);
+    float dist = x->distance2(expX);
     ASSERT_TRUE(dist <= 0.001);
 }
 
@@ -580,7 +585,7 @@ TEST_F(TestSuite, VectorSolve3x3_Singular) {
     DenseVector b(&dataB[0], 3);
 
     try {
-        DenseVector x = A.solve(b);
+        A.solve(&b);
         FAIL();    
     } catch (const invalid_argument& ex) {
         // pass
@@ -601,11 +606,11 @@ TEST_F(TestSuite, MatrixInverse3x3) {
     };
 
     DenseMatrix A(&dataA[0][0], 3, 3);
-    DenseMatrix AInv = A.inverse();
+    DenseMatrix *AInv = A.inverse();
 
     DenseMatrix expAInv(&dataAInv[0][0], 3, 3);
 
-    float dist = AInv.distance2(expAInv);
+    float dist = AInv->distance2(&expAInv);
     ASSERT_TRUE(dist <= 0.001);
 }
 
@@ -622,7 +627,7 @@ TEST_F(TestSuite, MatrixSolve3x3_Singular) {
     DenseMatrix B(&dataB[0], 3, 1);
 
     try {
-        DenseMatrix X = A.solveMatrix(B);
+        DenseMatrix *X = A.solveMatrix(&B);
         FAIL();    
     } catch (const invalid_argument& ex) {
         // pass
@@ -643,13 +648,12 @@ TEST_F(TestSuite, MatrixInverse50x50) {
 
     DenseMatrix A(data, n, n);
 
-    DenseMatrix AInv = A.inverse();
-    DenseMatrix AAinv = A.mmult(AInv);
+    DenseMatrix *AInv = A.inverse();
+    DenseMatrix *AAinv = A.mmult(AInv);
 
-    DenseMatrix I = DenseMatrix::eye(n);
+    DenseMatrix *I = DenseMatrix::eye(n);
 
-    float dist = AAinv.distance2(I);
-    cout << "error: " << dist << endl;
+    float dist = AAinv->distance2(I);
     ASSERT_TRUE(dist <= 1e-6);
 }
 
@@ -668,13 +672,12 @@ TEST_F(TestSuite, MatrixInverseGJ100x100) {
 
     DenseMatrix A(data, n, n);
 
-    DenseMatrix AInv = A.inverseGaussJordan();
-    DenseMatrix AAinv = A.mmult(AInv);
+    DenseMatrix *AInv = A.inverseGaussJordan();
+    DenseMatrix *AAinv = A.mmult(AInv);
 
-    DenseMatrix I = DenseMatrix::eye(n);
+    DenseMatrix *I = DenseMatrix::eye(n);
 
-    float dist = AAinv.distance2(I);
-    cout << "error: " << dist << endl;
+    float dist = AAinv->distance2(I);
     ASSERT_TRUE(dist <= 1e-6);
 }
 
@@ -713,13 +716,13 @@ TEST_F(TestSuite, LUDecomposition4x4) {
     DenseMatrix A(&dataA[0][0], 4, 4);
     LUDecomposition result = A.lu();
 
-    float distP = result.P->distance2(expP);
+    float distP = result.P->distance2(&expP);
     ASSERT_TRUE(distP <= 0.00001);
 
-    float distL = result.L->distance2(expL);
+    float distL = result.L->distance2(&expL);
     ASSERT_TRUE(distL <= 0.001);
 
-    float distU = result.U->distance2(expU);
+    float distU = result.U->distance2(&expU);
     ASSERT_TRUE(distU <= 0.001);
 }
 
@@ -740,11 +743,10 @@ TEST_F(TestSuite, MatrixLU50x50) {
     LUDecomposition PLU = A.lu();
     DenseMatrix *P = PLU.P, *L = PLU.L, *U = PLU.U;
 
-    DenseMatrix PA = P->mmult(A);
-    DenseMatrix LU = L->mmult(*U);
+    DenseMatrix *PA = P->mmult(&A);
+    DenseMatrix *LU = L->mmult(U);
 
-    float dist = PA.distance2(LU);
-    cout << "error: " << dist << endl;
+    float dist = PA->distance2(LU);
     ASSERT_TRUE(dist <= 1e-6);
 
     delete P;
@@ -767,13 +769,12 @@ TEST_F(TestSuite, MatrixInverseLU100x100) {
 
     DenseMatrix A(data, n, n);
 
-    DenseMatrix AInv = A.inverseLU();
-    DenseMatrix AAinv = A.mmult(AInv);
+    DenseMatrix *AInv = A.inverseLU();
+    DenseMatrix *AAinv = A.mmult(AInv);
 
-    DenseMatrix I = DenseMatrix::eye(n);
+    DenseMatrix *I = DenseMatrix::eye(n);
 
-    float dist = AAinv.distance2(I);
-    cout << "error: " << dist << endl;
+    float dist = AAinv->distance2(I);
     ASSERT_TRUE(dist <= 1e-4);
 }
 
@@ -792,19 +793,18 @@ TEST_F(TestSuite, MatrixGramSchmidt) {
 
     DenseMatrix A(data, n, n);
 
-    DenseMatrix Q = A.orthonormalize();
+    DenseMatrix *Q = A.orthonormalize();
 
-    DenseMatrix QT = Q.transpose();
-    DenseMatrix QTQ = QT.mmult(Q);
-    DenseMatrix QQT = Q.mmult(QT);
+    DenseMatrix *QT = Q->transpose();
+    DenseMatrix *QTQ = QT->mmult(Q);
+    DenseMatrix *QQT = Q->mmult(QT);
 
-    DenseMatrix I = DenseMatrix::eye(n);
+    DenseMatrix *I = DenseMatrix::eye(n);
 
-    float dist1 = QTQ.distance2(I);
-    cout << dist1 << endl;
+    float dist1 = QTQ->distance2(I);
     ASSERT_TRUE(dist1 <= 1e-4);
 
-    float dist2 = QQT.distance2(I);
+    float dist2 = QQT->distance2(I);
     ASSERT_TRUE(dist2 <= 1e-4);
 
 }
@@ -827,23 +827,23 @@ TEST_F(TestSuite, MatrixQR_100x100) {
     QRDecomposition qr = A.qr();
     DenseMatrix *QT = qr.QT, *R = qr.R;
 
-    DenseMatrix Q = QT->transpose();
-    DenseMatrix QR = Q.mmult(*R);
-    float dist0 = QR.distance2(A);
+    DenseMatrix *Q = QT->transpose();
+    DenseMatrix *QR = Q->mmult(R);
+    float dist0 = QR->distance2(&A);
     ASSERT_TRUE(dist0 <= 1e-4);
 
-    DenseMatrix QTQ = QT->mmult(Q);
-    DenseMatrix QQT = Q.mmult(*QT);
-    DenseMatrix I = DenseMatrix::eye(n);
+    DenseMatrix *QTQ = QT->mmult(Q);
+    DenseMatrix *QQT = Q->mmult(QT);
+    DenseMatrix *I = DenseMatrix::eye(n);
 
-    float dist1 = QTQ.distance2(I);
+    float dist1 = QTQ->distance2(I);
     ASSERT_TRUE(dist1 <= 1e-4);
 
-    float dist2 = QQT.distance2(I);
+    float dist2 = QQT->distance2(I);
     ASSERT_TRUE(dist2 <= 1e-4);
 
-    DenseMatrix QTA = QT->mmult(A);
-    float dist3 = QTA.distance2(*R);
+    DenseMatrix *QTA = QT->mmult(&A);
+    float dist3 = QTA->distance2(R);
     ASSERT_TRUE(dist3 <= 1e-4);
 
 }
@@ -863,12 +863,11 @@ TEST_F(TestSuite, MatrixInverseQR100x100) {
 
     DenseMatrix A(data, n, n);
 
-    DenseMatrix AInv = A.inverseQR();
-    DenseMatrix AAinv = A.mmult(AInv);
+    DenseMatrix *AInv = A.inverseQR();
+    DenseMatrix *AAinv = A.mmult(AInv);
 
-    DenseMatrix I = DenseMatrix::eye(n);
+    DenseMatrix *I = DenseMatrix::eye(n);
 
-    float dist = AAinv.distance2(I);
-    cout << "error: " << dist << endl;
+    float dist = AAinv->distance2(I);
     ASSERT_TRUE(dist <= 1e-4);
 }
