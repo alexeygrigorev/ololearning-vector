@@ -1,162 +1,29 @@
 #include "DenseVector.h"
-#include "DenseMatrix.h"
-#include "testsuite.h"
-
 #include <iostream>
 #include <cmath>
 #include <random>
 
+#include "DenseMatrix.h"
+#include "gtest/gtest.h"
+
 using namespace std;
 
-TestSuite::TestSuite() {}
-TestSuite::~TestSuite() {};
-
-void TestSuite::SetUp() {};
-void TestSuite::TearDown() {};
+class MatrixTestSuite : public ::testing::Test {};
 
 
-TEST_F(TestSuite, VectorInitializedWithZeros) {
-    DenseVector v(15);
-    EXPECT_EQ(v.get(1), 0.0);
+TEST_F(MatrixTestSuite, MatrixInitializedWithZeros) {
+    DenseMatrix M(10, 15);
+    EXPECT_EQ(M.get(0, 3), 0.0);
 }
 
-TEST_F(TestSuite, VectorSetAndGet) {
-    DenseVector v(15);
-    v.set(1, 10.0);
-    EXPECT_EQ(v.get(1), 10.0);
-}
-
-TEST_F(TestSuite, VectorInitializedWithArray) {
-    const size_t size = 4;
-    float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-
-    DenseVector v(data, size);
-
-    EXPECT_EQ(v.get(0), 0.0);
-    EXPECT_EQ(v.get(1), 1.0);
-    EXPECT_EQ(v.get(2), 2.0);
-    EXPECT_EQ(v.get(3), 3.0);
-}
-
-TEST_F(TestSuite, VectorSwap) {
-    const size_t size = 4;
-    float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-
-    DenseVector v(data, size);
-    v.swap(1, 2);
-
-    EXPECT_EQ(v.get(0), 0.0);
-    EXPECT_EQ(v.get(1), 2.0);
-    EXPECT_EQ(v.get(2), 1.0);
-    EXPECT_EQ(v.get(3), 3.0);
-}
-
-TEST_F(TestSuite, VectorNorm2) {
-    const size_t size = 4;
-    float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-
-    DenseVector v(data, size);
-    float norm2 = v.norm2();
-    float expected = 1 + 4 + 9;
-
-    EXPECT_EQ(norm2, expected);
-}
-
-TEST_F(TestSuite, VectorScale) {
-    const size_t size = 4;
-    float* data = new float[size] { 0, 1, 2, 3 };
-
-    DenseVector v(data, size);
-    DenseVector *u = v.scale(2, false);
-
-    float* dataScaled = new float[size] { 0, 2, 4, 6 };
-    DenseVector scaled(dataScaled, size);
-
-    float dist = u->distance2(&scaled);
-    ASSERT_TRUE(dist <= 1e-6);
+TEST_F(MatrixTestSuite, MatrixSetAndGet) {
+    DenseMatrix M(10, 15);
+    M.set(3, 3, 5.0);
+    EXPECT_EQ(M.get(3, 3), 5.0);
 }
 
 
-TEST_F(TestSuite, VectorUnitNormalize) {
-    const size_t size = 4;
-    float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-
-    DenseVector v(data, size);
-    DenseVector *u = v.unitize(false);
-
-    EXPECT_EQ(1 + 4 + 9, v.norm2());   
-    ASSERT_TRUE(abs(u->norm2() - 1) < 1e-6);
-}
-
-
-TEST_F(TestSuite, VectorUnitNormalizeInplace) {
-    const size_t size = 4;
-    float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-
-    DenseVector v(data, size);
-    v.unitize(true);
-
-    float norm2 = v.norm2();
-    ASSERT_TRUE(abs(norm2 - 1) < 1e-6);
-}
-
-
-
-
-TEST_F(TestSuite, VectorDistance2) {
-    const size_t size = 4;
-    float* data1 = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-    float* data2 = new float[size] { 3.0, 3.0, 3.0, 3.0 };
-
-    DenseVector v1(data1, size), v2(data2, size);
-    float dist2 = v1.distance2(&v2);
-    float expected = 9 + 4 + 1 + 0;
-
-    EXPECT_EQ(dist2, expected);
-}
-
-
-TEST_F(TestSuite, VectorDot) {
-    const size_t size = 4;
-    float* data1 = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-    float* data2 = new float[size] { 3.0, 3.0, 3.0, 3.0 };
-
-    DenseVector v1(data1, size), v2(data2, size);
-    float dot = v1.dot(&v2);
-    float expected = 3 + 6 + 9;
-
-    EXPECT_EQ(dot, expected);
-}
-
-
-TEST_F(TestSuite, VectorSubtract) {
-    const size_t size = 4;
-    float* data1 = new float[size] { 0.0, 1.0, 2.0, 3.0 };
-    float* data2 = new float[size] { 3.0, 3.0, 3.0, 3.0 };
-
-    DenseVector v1(data1, size), v2(data2, size);
-    DenseVector *s = v1.subtract(&v2, false);
-
-    EXPECT_EQ(s->get(0), -3);
-    EXPECT_EQ(s->get(1), -2);
-    EXPECT_EQ(s->get(2), -1);
-    EXPECT_EQ(s->get(3), 0);
-}
-
-
-TEST_F(TestSuite, MatrixInitializedWithZeros) {
-    DenseMatrix m(10, 15);
-    EXPECT_EQ(m.get(0, 3), 0.0);
-}
-
-TEST_F(TestSuite, MatrixSetAndGet) {
-    DenseMatrix m(10, 15);
-    m.set(3, 3, 5.0);
-    EXPECT_EQ(m.get(3, 3), 5.0);
-}
-
-
-TEST_F(TestSuite, MatrixInitializedWithArray) {
+TEST_F(MatrixTestSuite, MatrixInitializedWithArray) {
     const int nrow = 4, ncol = 3;
     float data[nrow][ncol] = {
         {0.0, 1.0, 2.0},
@@ -174,7 +41,7 @@ TEST_F(TestSuite, MatrixInitializedWithArray) {
     EXPECT_EQ(m.get(3, 2), 1.0);
 }
 
-TEST_F(TestSuite, MatrixClone) {
+TEST_F(MatrixTestSuite, MatrixClone) {
     float dataA[2][2] = {
         { 1, 2 },
         { 2, 2 },
@@ -188,7 +55,7 @@ TEST_F(TestSuite, MatrixClone) {
 }
 
 
-TEST_F(TestSuite, MatrixGetColumn) {
+TEST_F(MatrixTestSuite, MatrixGetColumn) {
     const int nrow = 4, ncol = 3;
     float data[nrow][ncol] = {
         {0.0, 1.0, 2.0},
@@ -207,7 +74,7 @@ TEST_F(TestSuite, MatrixGetColumn) {
     EXPECT_EQ(0, diff);
 }
 
-TEST_F(TestSuite, MatrixGetRow) {
+TEST_F(MatrixTestSuite, MatrixGetRow) {
     const int nrow = 4, ncol = 3;
     float data[nrow][ncol] = {
         {0.0, 1.0, 2.0},
@@ -226,7 +93,7 @@ TEST_F(TestSuite, MatrixGetRow) {
     EXPECT_EQ(0, diff);
 }
 
-TEST_F(TestSuite, MatrixSwapRow) {
+TEST_F(MatrixTestSuite, MatrixSwapRow) {
     const int nrow = 4, ncol = 3;
     float data[nrow][ncol] = {
         {0.0, 1.0, 2.0},
@@ -255,7 +122,7 @@ TEST_F(TestSuite, MatrixSwapRow) {
     EXPECT_EQ(0, dist2);
 }
 
-TEST_F(TestSuite, MatrixSubtract) {
+TEST_F(MatrixTestSuite, MatrixSubtract) {
     const int nrow = 2, ncol = 3;
     float data1[nrow][ncol] = {
         {0.0, 1.0, 2.0},
@@ -280,7 +147,7 @@ TEST_F(TestSuite, MatrixSubtract) {
     EXPECT_EQ(res->get(1, 2),  4.0);
 }
 
-TEST_F(TestSuite, MatrixNorm2) {
+TEST_F(MatrixTestSuite, MatrixNorm2) {
     const int nrow = 2, ncol = 2;
     float data[nrow][ncol] = {
         {0.0, 1.0},
@@ -293,7 +160,7 @@ TEST_F(TestSuite, MatrixNorm2) {
     EXPECT_EQ(norm, expected);
 }
 
-TEST_F(TestSuite, MatrixDistance2) {
+TEST_F(MatrixTestSuite, MatrixDistance2) {
     const int nrow = 2, ncol = 2;
     float data1[nrow][ncol] = {
         {0.0, 1.0},
@@ -304,17 +171,17 @@ TEST_F(TestSuite, MatrixDistance2) {
         {2.0, 2.0},
     };
 
-    DenseMatrix m1(&data1[0][0], nrow, ncol);
-    DenseMatrix m2(&data2[0][0], nrow, ncol);
+    DenseMatrix M1(&data1[0][0], nrow, ncol);
+    DenseMatrix M2(&data2[0][0], nrow, ncol);
 
-    float diff = m1.distance2(&m2);
+    float diff = M1.distance2(&M2);
     float expected = 4.0 + 1.0 + 1.0;
 
     EXPECT_EQ(diff, expected);
 }
 
 
-TEST_F(TestSuite, MatrixTranspose) {
+TEST_F(MatrixTestSuite, MatrixTranspose) {
     const int nrow = 4, ncol = 3;
     float data[nrow][ncol] = {
         {0.0, 1.0, 2.0},
@@ -337,7 +204,7 @@ TEST_F(TestSuite, MatrixTranspose) {
     EXPECT_EQ(dist, 0);
 }
 
-TEST_F(TestSuite, MatrixVectorMult) {
+TEST_F(MatrixTestSuite, MatrixVectorMult) {
     const int nrow = 4, ncol = 3;
     float data[nrow][ncol] = {
         {0.0, 1.0, 2.0},
@@ -359,7 +226,7 @@ TEST_F(TestSuite, MatrixVectorMult) {
 }
 
 
-TEST_F(TestSuite, MatrixMatrixMult) {
+TEST_F(MatrixTestSuite, MatrixMatrixMult) {
     float dataA[3][2] = {
         {0.0, 1.0},
         {3.0, 4.0},
@@ -386,7 +253,7 @@ TEST_F(TestSuite, MatrixMatrixMult) {
 }
 
 
-TEST_F(TestSuite, MatrixSolve3x3Simple) {
+TEST_F(MatrixTestSuite, MatrixSolve3x3Simple) {
     float dataA[3][3] = {
         { 1, 1, 1 },
         { 0, 1, 1 },
@@ -407,7 +274,7 @@ TEST_F(TestSuite, MatrixSolve3x3Simple) {
 
 
 
-TEST_F(TestSuite, MatrixSolve3x3) {
+TEST_F(MatrixTestSuite, MatrixSolve3x3) {
     float dataA[3][3] = {
         { 1, 2, 1 },
         { 3, 8, 1 },
@@ -426,7 +293,7 @@ TEST_F(TestSuite, MatrixSolve3x3) {
     ASSERT_TRUE(dist <= 0.005);
 }
 
-TEST_F(TestSuite, MatrixSolve3x3Matrix) {
+TEST_F(MatrixTestSuite, MatrixSolve3x3Matrix) {
     float dataA[3][3] = {
         { 1, 2, 1 },
         { 3, 8, 1 },
@@ -453,7 +320,7 @@ TEST_F(TestSuite, MatrixSolve3x3Matrix) {
     ASSERT_TRUE(dist <= 0.005);
 }
 
-TEST_F(TestSuite, MatrixSolve3x3Matrix_SmallB) {
+TEST_F(MatrixTestSuite, MatrixSolve3x3Matrix_SmallB) {
     float dataA[3][3] = {
         { 1, 2, 1 },
         { 3, 8, 1 },
@@ -480,7 +347,7 @@ TEST_F(TestSuite, MatrixSolve3x3Matrix_SmallB) {
     ASSERT_TRUE(dist <= 0.005);
 }
 
-TEST_F(TestSuite, MatrixSolve3x3Matrix_WideB) {
+TEST_F(MatrixTestSuite, MatrixSolve3x3Matrix_WideB) {
     float dataA[3][3] = {
         { 1, 2, 1 },
         { 3, 8, 1 },
@@ -508,7 +375,7 @@ TEST_F(TestSuite, MatrixSolve3x3Matrix_WideB) {
 }
 
 
-TEST_F(TestSuite, MatrixSolve3x3MatrixInverse) {
+TEST_F(MatrixTestSuite, MatrixSolve3x3MatrixInverse) {
     float dataA[3][3] = {
         { 1, 2, 1 },
         { 3, 8, 1 },
@@ -535,7 +402,7 @@ TEST_F(TestSuite, MatrixSolve3x3MatrixInverse) {
     ASSERT_TRUE(dist <= 0.005);
 }
 
-TEST_F(TestSuite, MatrixInverse2x2) {
+TEST_F(MatrixTestSuite, MatrixInverse2x2) {
     float dataA[2][2] = {
         { 1, 2 },
         { 2, 2 },
@@ -554,7 +421,7 @@ TEST_F(TestSuite, MatrixInverse2x2) {
     ASSERT_TRUE(dist <= 0.000001);
 }
 
-TEST_F(TestSuite, VectorSolve3x3_2) {
+TEST_F(MatrixTestSuite, VectorSolve3x3_2) {
     float dataA[3][3] = {
         { 60, 91, 26 },
         { 60,  3, 75 },
@@ -573,7 +440,7 @@ TEST_F(TestSuite, VectorSolve3x3_2) {
     ASSERT_TRUE(dist <= 0.001);
 }
 
-TEST_F(TestSuite, VectorSolve3x3_Singular) {
+TEST_F(MatrixTestSuite, VectorSolve3x3_Singular) {
     float dataA[3][3] = {
         { 91, 91, 26 },
         {  3,  3, 75 },
@@ -593,7 +460,7 @@ TEST_F(TestSuite, VectorSolve3x3_Singular) {
 }
 
 
-TEST_F(TestSuite, MatrixInverse3x3) {
+TEST_F(MatrixTestSuite, MatrixInverse3x3) {
     float dataA[3][3] = {
         { 60, 91, 26 },
         { 60,  3, 75 },
@@ -615,7 +482,7 @@ TEST_F(TestSuite, MatrixInverse3x3) {
 }
 
 
-TEST_F(TestSuite, MatrixSolve3x3_Singular) {
+TEST_F(MatrixTestSuite, MatrixSolve3x3_Singular) {
     float dataA[3][3] = {
         { 91, 91, 26 },
         {  3,  3, 75 },
@@ -634,7 +501,7 @@ TEST_F(TestSuite, MatrixSolve3x3_Singular) {
     }
 }
 
-TEST_F(TestSuite, MatrixInverse50x50) {
+TEST_F(MatrixTestSuite, MatrixInverse50x50) {
     int seed = 10;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
@@ -658,7 +525,7 @@ TEST_F(TestSuite, MatrixInverse50x50) {
 }
 
 
-TEST_F(TestSuite, MatrixInverseGJ100x100) {
+TEST_F(MatrixTestSuite, MatrixInverseGJ100x100) {
     int seed = 10;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
@@ -682,7 +549,7 @@ TEST_F(TestSuite, MatrixInverseGJ100x100) {
 }
 
 
-TEST_F(TestSuite, LUDecomposition4x4) {
+TEST_F(MatrixTestSuite, LUDecomposition4x4) {
     float dataA[4][4] = {
         { 7,  3, -1,  2 },
         { 3,  8,  1, -4 },
@@ -726,7 +593,7 @@ TEST_F(TestSuite, LUDecomposition4x4) {
     ASSERT_TRUE(distU <= 0.001);
 }
 
-TEST_F(TestSuite, MatrixLU50x50) {
+TEST_F(MatrixTestSuite, MatrixLU50x50) {
     int seed = 10;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
@@ -755,7 +622,7 @@ TEST_F(TestSuite, MatrixLU50x50) {
 }
 
 
-TEST_F(TestSuite, MatrixInverseLU100x100) {
+TEST_F(MatrixTestSuite, MatrixInverseLU100x100) {
     int seed = 100;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
@@ -779,7 +646,7 @@ TEST_F(TestSuite, MatrixInverseLU100x100) {
 }
 
 
-TEST_F(TestSuite, MatrixGramSchmidt) {
+TEST_F(MatrixTestSuite, MatrixGramSchmidt) {
     int seed = 100;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
@@ -810,7 +677,7 @@ TEST_F(TestSuite, MatrixGramSchmidt) {
 }
 
 
-TEST_F(TestSuite, MatrixQR_100x100) {
+TEST_F(MatrixTestSuite, MatrixQR_100x100) {
     int seed = 100;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
@@ -849,7 +716,7 @@ TEST_F(TestSuite, MatrixQR_100x100) {
 }
 
 
-TEST_F(TestSuite, MatrixInverseQR100x100) {
+TEST_F(MatrixTestSuite, MatrixInverseQR100x100) {
     int seed = 100;
     std::mt19937_64 random_gen(seed);
     std::uniform_real_distribution<float> unif_random(0, 1);
