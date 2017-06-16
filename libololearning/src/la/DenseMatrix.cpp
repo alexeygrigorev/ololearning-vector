@@ -316,7 +316,7 @@ DenseVector* gaussJordanEliminationVector(DenseMatrix *A, DenseVector *vector) {
     delete U;
     delete b;
 
-    return new DenseVector(x, n);
+    return new DenseVector(x, n, false);
 }
 
 
@@ -490,14 +490,15 @@ DenseMatrix* DenseMatrix::inverseGaussJordan() {
 }
 
 
-DenseMatrix* upperTriangularSolveMatrix(DenseMatrix *U, DenseMatrix *matrix) {
+DenseMatrix* upperTriangularSolveMatrix(DenseMatrix *U, DenseMatrix *matrix, 
+        bool solveInplace) {
     size_t n = U->numRows();
     assert(U->numRows() == U->numCols());
     assert(n == matrix->numRows());
     // check that U is upper triangular ?
 
     size_t bNumCols = matrix->numCols();
-    DenseMatrix *B = matrix->copy();
+    DenseMatrix *B = solveInplace ? matrix : matrix->copy();
     DenseMatrix *X = new DenseMatrix(n, bNumCols);
 
     for (int i = n - 1; i >= 0; i--) {
@@ -512,18 +513,22 @@ DenseMatrix* upperTriangularSolveMatrix(DenseMatrix *U, DenseMatrix *matrix) {
         }
     }
 
-    delete B;
+    if (!solveInplace) {
+        delete B;    
+    }
+
     return X;
 }
 
-DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix) {
+DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix, 
+        bool solveInplace) {
     size_t n = L->numRows();
     assert(L->numRows() == L->numCols());
     assert(n == matrix->numRows());
-    // check that U is upper triangular ?
+    // check that L is lower triangular ?
 
     size_t bNumCols = matrix->numCols();
-    DenseMatrix *B = matrix->copy();
+    DenseMatrix *B = solveInplace ? matrix : matrix->copy();
 
     DenseMatrix *X = new DenseMatrix(n, bNumCols);
 
@@ -531,7 +536,7 @@ DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix) {
         for (size_t j = 0; j < bNumCols; j++) {
             float newVal = B->get(i, j) / L->get(i, i);
             X->set(i, j, newVal);
- 
+
             for (size_t k = i + 1; k < n; k++) {
                 float s = L->get(k, i) * newVal;
                 B->set(k, j, B->get(k, j) - s);
@@ -539,7 +544,10 @@ DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix) {
         }
     }
 
-    delete B;
+    if (!solveInplace) {
+        delete B;    
+    }
+
     return X;
 }
 
@@ -549,8 +557,8 @@ DenseMatrix* DenseMatrix::inverseLU() {
 
     DenseMatrix *P = PLU.P, *L = PLU.L, *U = PLU.U;
 
-    DenseMatrix *Y = lowerTriangularSolveMatrix(L, P);
-    DenseMatrix *X = upperTriangularSolveMatrix(U, Y);
+    DenseMatrix *Y = lowerTriangularSolveMatrix(L, P, true);
+    DenseMatrix *X = upperTriangularSolveMatrix(U, Y, true);
 
     delete P;
     delete L;
@@ -632,7 +640,7 @@ DenseMatrix* DenseMatrix::inverseQR() {
     QRDecomposition QR = this->qr();
 
     DenseMatrix *QT = QR.QT, *R = QR.R;
-    DenseMatrix *X = upperTriangularSolveMatrix(R, QT);
+    DenseMatrix *X = upperTriangularSolveMatrix(R, QT, true);
 
     delete QT;
     delete R;
