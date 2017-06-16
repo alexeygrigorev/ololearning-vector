@@ -1,3 +1,4 @@
+#include "DenseVector.h"
 #include "DenseMatrix.h"
 #include "testsuite.h"
 

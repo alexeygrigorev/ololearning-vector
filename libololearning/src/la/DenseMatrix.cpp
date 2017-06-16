@@ -6,188 +6,11 @@
 #include <stdexcept>
 #include <cassert>
 
+#include "DenseVector.h"
 #include "DenseMatrix.h"
+#include "math_utils.cpp"
 
 using namespace std;
-
-float* zeroVector(size_t size) {
-    float* data = new float[size];
-    memset(data, 0, size * sizeof(float));
-    return data;
-}
-
-float* zeroMatrix(size_t nrow, size_t ncol) {
-    return zeroVector(nrow * ncol);
-}
-
-DenseVector::DenseVector(size_t size) {
-    this->_data = zeroVector(size);
-    this->_size = size;
-}
-
-DenseVector::DenseVector(float* data, size_t size) {
-    this->_data = data;
-    this->_size = size;
-}
-
-DenseVector::~DenseVector() {
-    // delete[] this->_data;
-}
-
-float DenseVector::get(size_t i) {
-    size_t size = this->_size;
-    assert(i < size);
-    float* data = this->_data;
-    return data[i];
-}
-
-void DenseVector::set(size_t i, float val) {
-    size_t size = this->_size;
-    assert(i < size);
-    float* data = this->_data;
-    data[i] = val;
-}
-
-void DenseVector::swap(size_t i, size_t j) {
-    size_t size = this->_size;
-    assert(i < size);
-    assert(j < size);
-    float* data = this->_data;
-
-    float tmp = data[i];
-    data[i] = data[j];
-    data[j] = tmp;
-}
-
-
-float arrayNorm2(float* data, size_t size) {
-    float norm2 = 0.0;
-    for (size_t i = 0; i < size; i++) {
-        float el = data[i];
-        norm2 = norm2 + el * el;
-    }
-
-    return norm2;
-}
-
-
-float DenseVector::norm2() {
-    size_t size = this->_size;
-    float* data = this->_data;
-    return arrayNorm2(data, size);
-}
-
-
-float* copyOrSame(float* array, size_t size, bool inplace) {
-    if (inplace == true) {
-        return array;
-    }
-
-    float* newData = new float[size];
-    memcpy(newData, array, size * sizeof(float));
-    return newData;
-}
-
-float DenseVector::distance2(DenseVector other) {
-    size_t size = this->_size;
-    assert(size == other._size);
-
-    float* data = this->_data;
-    float* oData = other._data;
-
-    float total = 0.0;
-    for (size_t i = 0; i < size; i++) {
-        float d = data[i] - oData[i];
-        total = total + d * d;
-    }
-
-    return total;
-}
-
-
-float DenseVector::dot(DenseVector other) {
-    size_t size = this->_size;
-    assert(size == other._size);
-
-    float* data = this->_data;
-    float* oData = other._data;
-
-    float total = 0.0;
-    for (size_t i = 0; i < size; i++) {
-        total = total + data[i] * oData[i];
-    }
-
-    return total;
-}
-
-
-// project this on u
-DenseVector DenseVector::project(DenseVector u) {
-    float vu = this->dot(u);
-    float uNorm2 = u.norm2();
-    float x = vu / uNorm2;
-    return u.scale(x, false);
-}
-
-DenseVector DenseVector::scale(float scalar, bool inplace) {
-    size_t size = this->_size;
-    float* data = copyOrSame(this->_data, size, inplace);
-
-    for (size_t i = 0; i < size; i++) {
-        data[i] = data[i] * scalar;
-    }
-
-    if (inplace == true) {
-        return *this;
-    } else {
-        return DenseVector(data, size);
-    }    
-}
-
-DenseVector DenseVector::unitize(bool inplace) {
-    float normInv = 1 / sqrt(this->norm2());
-    return this->scale(normInv, inplace);
-}
-
-DenseVector DenseVector::subtract(DenseVector other, bool inplace) {
-    size_t size = this->_size;
-    assert(size == other._size);
-
-    float* newData = copyOrSame(this->_data, size, inplace);
-    float* data = this->_data;
-    float* oData = other._data;
-
-    for (size_t i = 0; i < size; i++) {
-        newData[i] = data[i] - oData[i];
-    }
-
-    if (inplace == true) {
-        return *this;
-    } else {
-        return DenseVector(newData, size);
-    }
-}
-
-
-
-size_t DenseVector::size() {
-    return this->_size;
-}
-
-float* DenseVector::getData() {
-    return this->_data;
-}
-
-DenseVector DenseVector::copy() {
-    float* data = this->_data;
-    size_t size = this->_size;
-
-    float* newData = new float[size];
-    memcpy(newData, data, size * sizeof(float));
-
-    return DenseVector(newData, size);
-}
-
 
 void DenseMatrix::init(float* data, size_t nrow, size_t ncol) {
     this->_nrow = nrow;
@@ -685,7 +508,6 @@ DenseMatrix* lowerTriangularSolveMatrix(DenseMatrix *L, DenseMatrix *matrix) {
     return X;
 }
 
-
 DenseMatrix DenseMatrix::inverseLU() {
     assert(this->_nrow == this->_ncol);
     LUDecomposition PLU = this->lu();
@@ -705,33 +527,6 @@ DenseMatrix DenseMatrix::inverseLU() {
 
 DenseMatrix DenseMatrix::inverse() {
     return this->inverseQR();
-}
-
-
-void arrayScale(float *data, float scale, size_t size) {
-    for (size_t i = 0; i < size; i++) {
-         data[i] = data[i] * scale;
-    }
-}
-
-void arrayUnitize(float *data, size_t size) {
-    float norm2 = arrayNorm2(data, size);
-    float norm = sqrt(norm2);
-    arrayScale(data, 1 / norm, size);
-}
-
-float arrayDot(float *u, float *v, size_t size) {
-    float dot = 0;
-    for (size_t i = 0; i < size; i++) {
-        dot = dot + u[i] * v[i];
-    }
-    return dot;
-}
-
-void addScaledVector(float* target, float *source, float scale, size_t size) {
-    for (size_t i = 0; i < size; i++) {
-        target[i] = target[i] + scale * source[i];
-    }
 }
 
 DenseMatrix DenseMatrix::orthonormalize() {
@@ -808,18 +603,6 @@ DenseMatrix DenseMatrix::inverseQR() {
     delete R;
 
     return *X;
-}
-
-void DenseVector::printVector() {    
-    size_t size = this->_size;
-    float* data = this->_data;
-
-    cout << "size: " << size << endl;
-    for (size_t i = 0; i < size; i++) {
-        cout << data[i] << " ";
-    }
-
-    cout << endl;
 }
 
 
