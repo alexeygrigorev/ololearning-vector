@@ -58,6 +58,13 @@ float arrayDot(float *u, float *v, size_t size) {
     return dot;
 }
 
+void matrixVectorProduct(float *M, float *b, float *res, size_t nrow, size_t ncol) {
+    for (size_t i = 0; i < nrow; i++) {
+        float *row = &M[i * ncol];
+        res[i] = arrayDot(row, b, ncol);
+    }
+}
+
 void addScaledVector(float* target, float *source, float scale, size_t size) {
     for (size_t i = 0; i < size; i++) {
         target[i] = target[i] + scale * source[i];

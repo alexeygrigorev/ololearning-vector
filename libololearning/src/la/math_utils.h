@@ -8,6 +8,7 @@ float* copyOrSame(float* array, size_t size, bool inplace);
 void arrayScale(float *data, float scale, size_t size);
 void arrayUnitize(float *data, size_t size);
 float arrayDot(float *u, float *v, size_t size);
+void matrixVectorProduct(float *M, float *b, float *res, size_t nrow, size_t ncol);
 void addScaledVector(float* target, float *source, float scale, size_t size);
 
 }

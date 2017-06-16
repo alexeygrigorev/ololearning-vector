@@ -32,6 +32,8 @@ public:
 
     DenseVector* getColumn(size_t col);
     DenseVector* getRow(size_t row);
+    float* getRowData(size_t row);
+
     void swapRows(size_t i, size_t j);
 
     float distance2(DenseMatrix *other);
@@ -64,8 +66,11 @@ public:
     void printMatrix();
 
 private:
-    void init(float* data, size_t nrow, size_t ncol);
+    DenseMatrix(float* data, size_t nrow, size_t ncol, bool external);
+    void init(float* data, size_t nrow, size_t ncol, bool external);
+
     size_t _nrow;
     size_t _ncol;
     float* _data;
+    bool _external;
 };

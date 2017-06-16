@@ -4,6 +4,8 @@ class DenseVector {
 public:
     DenseVector(size_t size);
     DenseVector(float* data, size_t size);
+    DenseVector(float* data, size_t size, bool external);
+
     ~DenseVector();
 
     float get(size_t i);
@@ -30,4 +32,5 @@ public:
 private:
     size_t _size;
     float* _data;
+    bool _external;
 };

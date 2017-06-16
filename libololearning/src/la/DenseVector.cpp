@@ -16,15 +16,26 @@ using namespace olomath;
 DenseVector::DenseVector(size_t size) {
     this->_data = zeroVector(size);
     this->_size = size;
+    this->_external = false;
 }
 
 DenseVector::DenseVector(float* data, size_t size) {
     this->_data = data;
     this->_size = size;
+    this->_external = true;
+}
+
+DenseVector::DenseVector(float* data, size_t size, bool external) {
+    this->_data = data;
+    this->_size = size;
+    this->_external = external;
 }
 
 DenseVector::~DenseVector() {
-    // delete[] this->_data;
+    if (!this->_external) {
+        delete[] this->_data;
+        this->_data = nullptr;
+    }
 }
 
 float DenseVector::get(size_t i) {
@@ -93,7 +104,7 @@ DenseVector* DenseVector::scale(float scalar, bool inplace) {
     if (inplace == true) {
         return this;
     } else {
-        return new DenseVector(data, size);
+        return new DenseVector(data, size, false);
     }    
 }
 
@@ -124,7 +135,7 @@ DenseVector* DenseVector::subtract(DenseVector *other, bool inplace) {
     if (inplace == true) {
         return this;
     } else {
-        return new DenseVector(newData, size);
+        return new DenseVector(newData, size, false);
     }
 }
 
@@ -144,7 +155,7 @@ DenseVector* DenseVector::copy() {
     float* newData = new float[size];
     memcpy(newData, data, size * sizeof(float));
 
-    return new DenseVector(newData, size);
+    return new DenseVector(newData, size, false);
 }
 
 void DenseVector::printVector() {    
