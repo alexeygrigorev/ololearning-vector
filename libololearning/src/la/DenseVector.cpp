@@ -59,12 +59,12 @@ float DenseVector::norm2() {
     return arrayNorm2(data, size);
 }
 
-float DenseVector::distance2(DenseVector other) {
+float DenseVector::distance2(DenseVector *other) {
     size_t size = this->_size;
-    assert(size == other._size);
+    assert(size == other->_size);
 
     float* data = this->_data;
-    float* oData = other._data;
+    float* oData = other->_data;
 
     float total = 0.0;
     for (size_t i = 0; i < size; i++) {
@@ -75,59 +75,58 @@ float DenseVector::distance2(DenseVector other) {
     return total;
 }
 
-float DenseVector::dot(DenseVector other) {
+float DenseVector::dot(DenseVector *other) {
     size_t size = this->_size;
-    assert(size == other._size);
+    assert(size == other->_size);
 
     float* data = this->_data;
-    float* oData = other._data;
+    float* oData = other->_data;
 
     return arrayDot(data, oData, size);
 }
 
-DenseVector DenseVector::scale(float scalar, bool inplace) {
+DenseVector* DenseVector::scale(float scalar, bool inplace) {
     size_t size = this->_size;
     float* data = copyOrSame(this->_data, size, inplace);
     arrayScale(data, scalar, size);
 
     if (inplace == true) {
-        return *this;
+        return this;
     } else {
-        return DenseVector(data, size);
+        return new DenseVector(data, size);
     }    
 }
 
-DenseVector DenseVector::project(DenseVector u) {
+DenseVector* DenseVector::project(DenseVector *u) {
     float vu = this->dot(u);
-    float uNorm2 = u.norm2();
+    float uNorm2 = u->norm2();
     float x = vu / uNorm2;
-    return u.scale(x, false);
+    return u->scale(x, false);
 }
 
-DenseVector DenseVector::unitize(bool inplace) {
+DenseVector* DenseVector::unitize(bool inplace) {
     float normInv = 1 / sqrt(this->norm2());
     return this->scale(normInv, inplace);
 }
 
-DenseVector DenseVector::subtract(DenseVector other, bool inplace) {
+DenseVector* DenseVector::subtract(DenseVector *other, bool inplace) {
     size_t size = this->_size;
-    assert(size == other._size);
+    assert(size == other->_size);
 
     float* newData = copyOrSame(this->_data, size, inplace);
     float* data = this->_data;
-    float* oData = other._data;
+    float* oData = other->_data;
 
     for (size_t i = 0; i < size; i++) {
         newData[i] = data[i] - oData[i];
     }
 
     if (inplace == true) {
-        return *this;
+        return this;
     } else {
-        return DenseVector(newData, size);
+        return new DenseVector(newData, size);
     }
 }
-
 
 
 size_t DenseVector::size() {
@@ -138,14 +137,14 @@ float* DenseVector::getData() {
     return this->_data;
 }
 
-DenseVector DenseVector::copy() {
+DenseVector* DenseVector::copy() {
     float* data = this->_data;
     size_t size = this->_size;
 
     float* newData = new float[size];
     memcpy(newData, data, size * sizeof(float));
 
-    return DenseVector(newData, size);
+    return new DenseVector(newData, size);
 }
 
 void DenseVector::printVector() {    

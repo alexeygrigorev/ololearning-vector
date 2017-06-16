@@ -180,7 +180,7 @@ DenseVector* DenseMatrix::vmult(DenseVector *vec) {
 
     for (size_t i = 0; i < nrow; i++) {
         DenseVector *row = this->getRow(i);
-        result[i] = row->dot(*vec);
+        result[i] = row->dot(vec);
     }
 
     return new DenseVector(result, nrow);
@@ -230,8 +230,7 @@ DenseVector* gaussJordanEliminationVector(DenseMatrix *A, DenseVector *vector) {
     assert(A->numRows() == A->numCols());
 
     DenseMatrix *U = A->copy();
-    DenseVector copy = vector->copy();
-    DenseVector *b = &copy;
+    DenseVector *b = vector->copy();
 
     for (size_t i = 0; i < n - 1; i++) {
         // 1. search for the max value in this col

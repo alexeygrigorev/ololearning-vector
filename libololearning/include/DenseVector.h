@@ -11,22 +11,22 @@ public:
     void swap(size_t i, size_t j);
 
     float norm2();
-    DenseVector unitize(bool inplace);
+    DenseVector* unitize(bool inplace);
 
-    float distance2(DenseVector other);
-    float dot(DenseVector other);
+    float distance2(DenseVector *other);
+    float dot(DenseVector *other);
 
-    DenseVector scale(float scalar, bool inplace);
-    DenseVector subtract(DenseVector other, bool inplace);
+    DenseVector* scale(float scalar, bool inplace);
+    DenseVector* subtract(DenseVector *other, bool inplace);
 
-    DenseVector project(DenseVector u);
+    DenseVector* project(DenseVector *u);
 
     void printVector();
 
     size_t size();
     float* getData();
 
-    DenseVector copy();
+    DenseVector* copy();
 private:
     size_t _size;
     float* _data;

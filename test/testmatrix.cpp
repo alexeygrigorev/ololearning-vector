@@ -67,12 +67,12 @@ TEST_F(TestSuite, VectorScale) {
     float* data = new float[size] { 0, 1, 2, 3 };
 
     DenseVector v(data, size);
-    DenseVector u = v.scale(2, false);
+    DenseVector *u = v.scale(2, false);
 
     float* dataScaled = new float[size] { 0, 2, 4, 6 };
     DenseVector scaled(dataScaled, size);
 
-    float dist = u.distance2(scaled);
+    float dist = u->distance2(&scaled);
     ASSERT_TRUE(dist <= 1e-6);
 }
 
@@ -82,10 +82,10 @@ TEST_F(TestSuite, VectorUnitNormalize) {
     float* data = new float[size] { 0.0, 1.0, 2.0, 3.0 };
 
     DenseVector v(data, size);
-    DenseVector u = v.unitize(false);
+    DenseVector *u = v.unitize(false);
 
     EXPECT_EQ(1 + 4 + 9, v.norm2());   
-    ASSERT_TRUE(abs(u.norm2() - 1) < 1e-6);
+    ASSERT_TRUE(abs(u->norm2() - 1) < 1e-6);
 }
 
 
@@ -109,7 +109,7 @@ TEST_F(TestSuite, VectorDistance2) {
     float* data2 = new float[size] { 3.0, 3.0, 3.0, 3.0 };
 
     DenseVector v1(data1, size), v2(data2, size);
-    float dist2 = v1.distance2(v2);
+    float dist2 = v1.distance2(&v2);
     float expected = 9 + 4 + 1 + 0;
 
     EXPECT_EQ(dist2, expected);
@@ -122,7 +122,7 @@ TEST_F(TestSuite, VectorDot) {
     float* data2 = new float[size] { 3.0, 3.0, 3.0, 3.0 };
 
     DenseVector v1(data1, size), v2(data2, size);
-    float dot = v1.dot(v2);
+    float dot = v1.dot(&v2);
     float expected = 3 + 6 + 9;
 
     EXPECT_EQ(dot, expected);
@@ -135,12 +135,12 @@ TEST_F(TestSuite, VectorSubtract) {
     float* data2 = new float[size] { 3.0, 3.0, 3.0, 3.0 };
 
     DenseVector v1(data1, size), v2(data2, size);
-    DenseVector s = v1.subtract(v2, false);
+    DenseVector *s = v1.subtract(&v2, false);
 
-    EXPECT_EQ(s.get(0), -3);
-    EXPECT_EQ(s.get(1), -2);
-    EXPECT_EQ(s.get(2), -1);
-    EXPECT_EQ(s.get(3), 0);
+    EXPECT_EQ(s->get(0), -3);
+    EXPECT_EQ(s->get(1), -2);
+    EXPECT_EQ(s->get(2), -1);
+    EXPECT_EQ(s->get(3), 0);
 }
 
 
@@ -203,7 +203,7 @@ TEST_F(TestSuite, MatrixGetColumn) {
     float colData[nrow] = { 1.0, 4.0, 7.0, 0.0 };
     DenseVector expected(&colData[0], nrow);
 
-    float diff = col->distance2(expected);
+    float diff = col->distance2(&expected);
     EXPECT_EQ(0, diff);
 }
 
@@ -222,7 +222,7 @@ TEST_F(TestSuite, MatrixGetRow) {
     float rowData[ncol] = { 3.0, 4.0, 5.0 };
     DenseVector expected(&rowData[0], ncol);
 
-    float diff = row->distance2(expected);
+    float diff = row->distance2(&expected);
     EXPECT_EQ(0, diff);
 }
 
@@ -243,7 +243,7 @@ TEST_F(TestSuite, MatrixSwapRow) {
     float rowData1[ncol] = { 6.0, 7.0, 8.0 };
     DenseVector expected1(&rowData1[0], ncol);
 
-    float dist1 = row1->distance2(expected1);
+    float dist1 = row1->distance2(&expected1);
     EXPECT_EQ(0, dist1);
 
 
@@ -251,7 +251,7 @@ TEST_F(TestSuite, MatrixSwapRow) {
     float rowData2[ncol] = { 3.0, 4.0, 5.0 };
     DenseVector expected2(&rowData2[0], ncol);
 
-    float dist2 = row2->distance2(expected2);
+    float dist2 = row2->distance2(&expected2);
     EXPECT_EQ(0, dist2);
 }
 
@@ -354,7 +354,7 @@ TEST_F(TestSuite, MatrixVectorMult) {
     DenseVector *res = M.vmult(&v);
     DenseVector expected(&edata[0], nrow);
 
-    float dist = res->distance2(expected);
+    float dist = res->distance2(&expected);
     EXPECT_EQ(dist, 0);
 }
 
@@ -401,7 +401,7 @@ TEST_F(TestSuite, MatrixSolve3x3Simple) {
 
     DenseVector expX(&dataXExp[0], 3);
     
-    float dist = x->distance2(expX);
+    float dist = x->distance2(&expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -422,7 +422,7 @@ TEST_F(TestSuite, MatrixSolve3x3) {
     
     DenseVector expX(&dataXExp[0], 3);
 
-    float dist = x->distance2(expX);
+    float dist = x->distance2(&expX);
     ASSERT_TRUE(dist <= 0.005);
 }
 
@@ -569,7 +569,7 @@ TEST_F(TestSuite, VectorSolve3x3_2) {
     
     DenseVector expX(&dataXExp[0], 3);
 
-    float dist = x->distance2(expX);
+    float dist = x->distance2(&expX);
     ASSERT_TRUE(dist <= 0.001);
 }
 
