@@ -648,7 +648,6 @@ DenseMatrix* DenseMatrix::inverseQR() {
     return X;
 }
 
-
 size_t DenseMatrix::numRows() {
     return this->_nrow;    
 }

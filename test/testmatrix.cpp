@@ -4,6 +4,7 @@
 #include <random>
 
 #include "DenseMatrix.h"
+#include "svd.h"
 #include "gtest/gtest.h"
 
 using namespace std;

@@ -1,5 +1,8 @@
 #include <cstddef>
 
+#pragma once
+#include "DenseVector.h"
+
 class DenseMatrix;
 
 struct LUDecomposition {
